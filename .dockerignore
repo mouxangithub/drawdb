@@ -34,3 +34,10 @@ docker-compose.yml
 
 # Ignore OS-specific files
 .DS_Store
+
+# 数据库文件
+server/database/*.sqlite
+server/database/*.sqlite-journal
+*.sqlite
+*.sqlite3
+*.db

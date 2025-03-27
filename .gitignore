@@ -23,3 +23,10 @@ dist-ssr
 *.sln
 *.sw?
 .env
+
+# 数据库文件
+server/database/*.sqlite
+server/database/*.sqlite-journal
+*.sqlite
+*.sqlite3
+*.db
