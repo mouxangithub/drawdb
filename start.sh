@@ -15,16 +15,6 @@ mkdir -p server/database backups
 # 命令行参数处理
 MODE=${1:-prod}
 
-# 打印环境变量（可选，用于调试）
-echo "NODE_ENV: $NODE_ENV"
-echo "PORT: $PORT"
-
-# 如果数据库目录不存在，创建它
-mkdir -p /app/server/database
-
-# 启动服务器
-cd /app && node server/src/index.js
-
 # 显示帮助信息
 show_help() {
   echo -e "${GREEN}DrawDB 一键部署脚本${NC}"
@@ -48,7 +38,7 @@ start_dev() {
   docker-compose up -d drawdb-dev
   echo -e "${GREEN}开发服务已启动!${NC}"
   echo -e "访问地址: ${GREEN}http://localhost:5173${NC}"
-  echo -e "API地址: ${GREEN}http://localhost:3002/api${NC}"
+  echo -e "API路径: ${GREEN}/api${NC}"
 }
 
 # 启动生产环境
@@ -82,7 +72,7 @@ start_local() {
   
   echo -e "${GREEN}本地服务已启动!${NC}"
   echo -e "前端地址: ${GREEN}http://localhost:5173${NC}"
-  echo -e "API地址: ${GREEN}http://localhost:3001/api${NC}"
+  echo -e "API路径: ${GREEN}/api${NC}"
 }
 
 # 执行手动备份

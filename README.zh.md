@@ -158,12 +158,6 @@ drawdb/
 项目使用`.env`文件统一配置前端和后端环境变量：
 
 ```bash
-# 前端配置
-VITE_BACKEND_URL=http://localhost:3001
-
-# API配置
-API_URL=http://localhost:3001/api
-
 # 服务器配置
 PORT=3001
 NODE_ENV=development
@@ -191,7 +185,6 @@ cp server/database/drawdb.sqlite backups/drawdb_$(date +%Y%m%d_%H%M%S).sqlite
 
 1. **静态文件不可访问**：确保正确设置了`STATIC_FILES_DIR`环境变量
 2. **Docker容器无法启动**：检查端口是否被占用，目录权限是否正确
-3. **API请求失败**：验证API_URL环境变量配置是否正确
 
 ## 🤝 贡献
 

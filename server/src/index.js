@@ -31,22 +31,8 @@ import { importTemplateSeeds } from './controllers/seedController.js';
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const app = express();
-const PORT = process.env.PORT || 3002;
-
-// 提取API URL路径
-const getApiPath = () => {
-  if (!process.env.API_URL) return '/api';
-  try {
-    return new URL(process.env.API_URL).pathname;
-  } catch (e) {
-    // 如果API_URL不是有效的URL，直接使用它作为路径
-    return process.env.API_URL.startsWith('/')
-      ? process.env.API_URL
-      : `/${process.env.API_URL}`;
-  }
-};
-
-const apiBasePath = getApiPath();
+const PORT = process.env.PORT || 3000;
+const apiBasePath = '/api';
 
 // 中间件
 app.use(cors({

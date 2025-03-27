@@ -62,15 +62,11 @@ RUN ls -la /app && \
 
 # 配置环境变量
 ENV NODE_ENV=production
-ENV STATIC_FILES_DIR=/app/server/public
-# API基础路径，使用动态API_URL环境变量，不再硬编码路径
-# 默认使用/api作为基础路径，但可以通过PORT环境变量动态调整
+# 默认使用/api作为基础路径
 ENV PORT=3000
-# 不再在此处设置固定的API_URL，而是在启动脚本中动态生成
 
 # 添加调试信息日志
 RUN echo "NODE_ENV=${NODE_ENV}" && \
-    echo "STATIC_FILES_DIR=${STATIC_FILES_DIR}" && \
     echo "PORT=${PORT}"
 
 # 安装生产环境依赖
@@ -82,7 +78,7 @@ RUN echo "Installing production dependencies..." && \
 # 暴露后端端口，使用变量保持一致性
 EXPOSE ${PORT}
 
-# 添加启动脚本，用于生成正确的API_URL配置
+# 添加启动脚本
 COPY docker-start.sh /app/docker-start.sh
 RUN chmod +x /app/docker-start.sh
 

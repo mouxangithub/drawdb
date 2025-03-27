@@ -5,7 +5,7 @@ services:
     container_name: drawdb-dev
     ports:
       - 5173:5173
-      - 3002:3002
+      - 3000:3000
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
@@ -13,11 +13,9 @@ services:
     networks:
       - default
     environment:
-      - PORT=3002
+      - PORT=3000
       - NODE_ENV=development
       - DB_STORAGE=server/database/drawdb.sqlite
-      - VITE_BACKEND_URL=http://localhost:3002
-      - API_URL=http://localhost:3002/api
 
   # 生产环境配置 - 使用构建好的镜像
   drawdb-prod:
@@ -36,7 +34,6 @@ services:
       - PORT=3000
       - NODE_ENV=production
       - DB_STORAGE=server/database/drawdb.sqlite
-      - API_URL=/api
       
   # 数据库备份服务 - 每天凌晨2点运行
   db-backup:

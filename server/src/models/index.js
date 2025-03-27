@@ -29,21 +29,13 @@ const sequelize = new Sequelize(dbConfig);
 // 导入模型
 import DiagramModel from './diagram.js';
 import TemplateModel from './template.js';
-import ShareModel from './share.js';
 
 const Diagram = DiagramModel(sequelize);
 const Template = TemplateModel(sequelize);
-const Share = ShareModel(sequelize);
-
-// 模型关联
-// 图表与分享内容的关联
-Diagram.hasMany(Share, { foreignKey: 'diagramId' });
-Share.belongsTo(Diagram, { foreignKey: 'diagramId' });
 
 // 导出模型和sequelize实例
 export {
   sequelize,
   Diagram,
   Template,
-  Share,
 }; 

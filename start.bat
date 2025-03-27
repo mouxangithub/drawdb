@@ -39,7 +39,7 @@ if "%MODE%"=="dev" (
   docker-compose up -d drawdb-dev
   echo %GREEN%开发服务已启动!%NC%
   echo 访问地址: %GREEN%http://localhost:5173%NC%
-  echo API地址: %GREEN%http://localhost:3002/api%NC%
+  echo API路径: %GREEN%/api%NC%
   goto :EOF
 )
 
@@ -75,7 +75,7 @@ if "%MODE%"=="local" (
   
   echo %GREEN%本地服务已启动!%NC%
   echo 前端地址: %GREEN%http://localhost:5173%NC%
-  echo API地址: %GREEN%http://localhost:3001/api%NC%
+  echo API路径: %GREEN%/api%NC%
   goto :EOF
 )
 

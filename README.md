@@ -158,12 +158,6 @@ drawdb/
 The project uses a `.env` file to configure both frontend and backend environment variables:
 
 ```bash
-# Frontend configuration
-VITE_BACKEND_URL=http://localhost:3001
-
-# API configuration
-API_URL=http://localhost:3001/api
-
 # Server configuration
 PORT=3001
 NODE_ENV=development
@@ -191,7 +185,6 @@ If you encounter issues, please check:
 
 1. **Static files not accessible**: Ensure that the `STATIC_FILES_DIR` environment variable is set correctly
 2. **Docker container won't start**: Check if the ports are already in use or if directory permissions are correct
-3. **API requests failing**: Verify that the API_URL environment variable is configured properly
 
 ## 🤝 Contributing
 

@@ -11,12 +11,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: `http://localhost:${process.env.PORT || 3002}`,
+        target: `http://localhost:${process.env.PORT || 3000}`,
         changeOrigin: true,
       }
     }
-  },
-  define: {
-    'import.meta.env.API_URL': JSON.stringify(process.env.API_URL)
   }
 })
