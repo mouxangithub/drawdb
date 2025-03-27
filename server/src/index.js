@@ -20,7 +20,6 @@ const __dirname = dirname(__filename);
 // 导入路由
 import diagramRoutes from './routes/diagrams.js';
 import templateRoutes from './routes/templates.js';
-import shareRoutes from './routes/shares.js';
 
 // 导入数据库连接
 import { sequelize } from './models/index.js';
@@ -100,7 +99,6 @@ app.get(`${apiBasePath}/docs/swagger-ui-init.js`, (req, res, next) => {
 // API路由
 app.use(`${apiBasePath}/diagrams`, diagramRoutes);
 app.use(`${apiBasePath}/templates`, templateRoutes);
-app.use(`${apiBasePath}/shares`, shareRoutes);
 
 // 获取静态文件路径
 function getStaticFilesPath() {

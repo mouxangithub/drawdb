@@ -14,7 +14,7 @@ export default {
   development: {
     dialect: 'sqlite',
     storage: path.join(__dirname, '../../database/drawdb.sqlite'),
-    logging: console.log,
+    logging: false,
   },
   test: {
     dialect: 'sqlite',
