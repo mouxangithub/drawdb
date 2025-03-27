@@ -43,6 +43,7 @@ Compared to the original project, this fork adds several key features:
 - **Automated Backups**: Built-in database backup functionality
 - **Enhanced Preview**: Interactive diagram preview with zoom and pan capabilities
 - **Optimized UI**: Refined user interface with control panel centered at bottom and floating info panel
+- **Creation Time Display**: Added creation time display in both grid and table view modes
 
 ## ✨ Core Features
 

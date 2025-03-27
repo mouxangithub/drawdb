@@ -70,49 +70,6 @@ export default function DiagramList() {
     }
   }, [t]);
 
-  // 加载详细图表数据
-  const fetchDiagramDetail = useCallback(async (id) => {
-    if (loadingRef.current) return; // 防止重复请求
-    
-    try {
-      loadingRef.current = true;
-      setLoading(true);
-      
-      const data = await diagramApi.getById(id);
-      
-      if (!data) {
-        throw new Error('未找到图表数据');
-      }
-      
-      // 检查图表是否有表格数据
-      const hasNoTables = !data.tables || data.tables.length === 0;
-      
-      if (hasNoTables) {
-        console.warn('图表没有表格数据');
-        // 可以选择在这里添加通知，但仍然显示视图模态框
-        Toast.info({
-          content: t('diagram_has_no_tables'),
-          duration: 3,
-        });
-      }
-      
-      // 先设置详细数据
-      setDetailedDiagram(data);
-      setViewModalVisible(true);
-      
-    } catch (error) {
-      console.error(`获取图表 ${id} 详情失败:`, error);
-      Notification.error({
-        title: t('error'),
-        content: t('get_diagram_detail_failed'),
-        duration: 3,
-      });
-    } finally {
-      loadingRef.current = false;
-      setLoading(false);
-    }
-  }, [t]);
-
   // 初始化加载图表
   useEffect(() => {
     document.title = "drawDB | " + t("diagram_list");
@@ -151,8 +108,33 @@ export default function DiagramList() {
 
   // 查看图表
   const handleViewDiagram = useCallback((id) => {
-    fetchDiagramDetail(id);
-  }, [fetchDiagramDetail]);
+    // 从已加载的图表数据中查找对应ID的图表
+    const diagram = diagrams.find(diagram => diagram.id === id);
+    
+    if (diagram) {
+      // 检查图表是否有表格数据
+      const hasNoTables = !diagram.tables || diagram.tables.length === 0;
+      
+      if (hasNoTables) {
+        console.warn('图表没有表格数据');
+        Toast.info({
+          content: t('diagram_has_no_tables'),
+          duration: 3,
+        });
+      }
+      
+      // 设置详细数据并显示视图模态框
+      setDetailedDiagram(diagram);
+      setViewModalVisible(true);
+    } else {
+      console.error(`未找到ID为 ${id} 的图表`);
+      Notification.error({
+        title: t('error'),
+        content: t('diagram_not_found'),
+        duration: 3,
+      });
+    }
+  }, [diagrams, t]);
 
   // 删除图表
   const handleDeleteDiagram = useCallback(async (id, name) => {
@@ -367,6 +349,7 @@ export default function DiagramList() {
                   <tr className="border-b border-color">
                     <th className="px-4 py-2 text-left" scope="col">{t('diagram_name')}</th>
                     <th className="px-4 py-2 text-left" scope="col">{t('database_type')}</th>
+                    <th className="px-4 py-2 text-left" scope="col">{t('create_time')}</th>
                     <th className="px-4 py-2 text-left" scope="col">{t('last_modified_time')}</th>
                     <th className="px-4 py-2 text-right" scope="col">{t('actions')}</th>
                   </tr>
@@ -380,7 +363,8 @@ export default function DiagramList() {
                     >
                       <td className="px-4 py-3">{diagram.name}</td>
                       <td className="px-4 py-3">{diagram.database}</td>
-                      <td className="px-4 py-3">{new Date(diagram.lastModified).toLocaleString()}</td>
+                      <td className="px-4 py-3">{diagram.createdAt ? new Date(diagram.createdAt).toLocaleString() : '-'}</td>
+                      <td className="px-4 py-3">{new Date(diagram.updatedAt).toLocaleString()}</td>
                       <td className="px-4 py-3 text-right">
                         <Button
                           icon={<IconSearch />}

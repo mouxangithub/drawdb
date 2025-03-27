@@ -4,7 +4,75 @@ import { IconEdit, IconDelete, IconShareStroked, IconEyeOpened } from '@douyinfe
 import { useTranslation } from 'react-i18next';
 import { databases } from '../../data/databases';
 import { darkBgTheme } from '../../data/constants';
-import DiagramPreviewThumb from './DiagramPreviewThumb';
+import Canvas from '../EditorCanvas/Canvas';
+import { CanvasContextProvider } from '../../context/CanvasContext';
+import TransformContextProvider from '../../context/TransformContext';
+import TablesContextProvider from '../../context/DiagramContext';
+import SelectContextProvider from '../../context/SelectContext';
+import UndoRedoContextProvider from '../../context/UndoRedoContext';
+import LayoutContextProvider from '../../context/LayoutContext';
+import NotesContextProvider from '../../context/NotesContext';
+import AreasContextProvider from '../../context/AreasContext';
+import SaveStateContextProvider from '../../context/SaveStateContext';
+import EnumsContextProvider from '../../context/EnumsContext';
+import TypesContextProvider from '../../context/TypesContext';
+import TasksContextProvider from '../../context/TasksContext';
+import { ReadOnlyContextProvider } from '../../context/ReadOnlyContext';
+import './DiagramPreviewCard.css'; // 确保创建相应的CSS文件
+import { useTransform } from '../../hooks'; // 添加useTransform钩子导入
+
+/**
+ * 计算合适的初始视图参数
+ * @param {Object} diagram - 图表数据
+ * @returns {Object} 包含zoom和pan属性的对象
+ */
+const calculateInitialView = (diagram) => {
+  if (!diagram || !diagram.tables || diagram.tables.length === 0) {
+    return { zoom: 1, pan: { x: 0, y: 0 } };
+  }
+
+  try {
+    // 确保所有表格都有宽度和高度
+    const tablesWithDimensions = diagram.tables.map(table => ({
+      ...table,
+      width: table.width || 180,
+      height: table.height || (table.fields?.length * 30 + 40) || 100
+    }));
+
+    // 计算所有表格的边界点
+    const allPoints = tablesWithDimensions.flatMap(table => [
+      { x: table.x, y: table.y },
+      { x: table.x + table.width, y: table.y + table.height }
+    ]);
+
+    // 计算边界框
+    const minX = Math.min(...allPoints.map(p => p.x)) - 100;
+    const minY = Math.min(...allPoints.map(p => p.y)) - 100;
+    const maxX = Math.max(...allPoints.map(p => p.x)) + 100;
+    const maxY = Math.max(...allPoints.map(p => p.y)) + 100;
+
+    // 计算尺寸和中心点
+    const width = maxX - minX;
+    const height = maxY - minY;
+    const centerX = minX + width / 2;
+    const centerY = minY + height / 2;
+
+    // 计算合适的缩放比例
+    const containerWidth = 200; // 预览卡片宽度
+    const containerHeight = 200; // 预览卡片高度
+    const scaleX = containerWidth / width;
+    const scaleY = containerHeight / height;
+    const zoom = Math.min(scaleX, scaleY, 1) * 0.5; // 限制最大缩放为1，并设置为50%显示比例
+
+    return {
+      zoom: zoom,
+      pan: { x: centerX, y: centerY }
+    };
+  } catch (error) {
+    console.error('计算初始视图错误:', error);
+    return { zoom: 0.8, pan: { x: 0, y: 0 } };
+  }
+};
 
 /**
  * 创建一个示例表用于预览图表
@@ -73,6 +141,7 @@ const createSampleDiagram = (database, name) => {
  */
 const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
   const { t } = useTranslation();
+  const [loading, setLoading] = useState(true);
   
   // 使用useMemo直接计算预处理后的图表数据，避免使用状态变量
   const diagramData = useMemo(() => {
@@ -88,8 +157,10 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
       
       // 确保至少有一个表格才显示预览，否则创建示例表格
       if (tables.length > 0) {
+        // 创建新对象，但不包含原始的zoom和pan属性
+        const { zoom, pan, ...diagramWithoutTransform } = diagram;
         return { 
-          ...diagram,
+          ...diagramWithoutTransform,
           tables, 
           references: relationships
         };
@@ -114,6 +185,21 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
       };
     }
   }, [diagram]);
+
+  // 计算初始转换参数
+  const initialTransform = useMemo(() => {
+    return calculateInitialView(diagramData);
+  }, [diagramData]);
+  
+  // 使用useEffect来处理加载状态变化
+  useEffect(() => {
+    if (diagramData) {
+      const timer = setTimeout(() => {
+        setLoading(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [diagramData]);
   
   // 使用useCallback优化按钮回调
   const handleView = useCallback(() => {
@@ -150,10 +236,10 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
 
   // 格式化更新时间
   const formattedUpdateTime = useMemo(() => {
-    if (!diagram?.lastModified) return t('no_update_time');
+    if (!diagram?.updatedAt) return t('no_update_time');
     
     try {
-      const date = new Date(diagram.lastModified);
+      const date = new Date(diagram.updatedAt);
       
       // 格式化为 YYYY-MM-DD HH:mm:ss
       const year = date.getFullYear();
@@ -169,6 +255,69 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
     }
   }, [diagram, t]);
 
+  // 格式化创建时间
+  const formattedCreateTime = useMemo(() => {
+    if (!diagram?.createdAt) return t('no_create_time');
+    
+    try {
+      const date = new Date(diagram.createdAt);
+      
+      // 格式化为 YYYY-MM-DD HH:mm:ss
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    } catch (e) {
+      return t('invalid_date');
+    }
+  }, [diagram, t]);
+
+  // 渲染Canvas预览
+  const renderCanvasPreview = () => {
+    if (!diagramData) return null;
+
+    return (
+      <div className="interactive-preview-container">
+        <LayoutContextProvider>
+          <TransformContextProvider>
+            <PreviewZoomController zoom={0.3} pan={initialTransform.pan} />
+            <UndoRedoContextProvider>
+              <SelectContextProvider>
+                <TasksContextProvider>
+                  <AreasContextProvider initialAreas={diagramData?.areas || []}>
+                    <NotesContextProvider initialNotes={diagramData?.notes || []}>
+                      <TypesContextProvider>
+                        <EnumsContextProvider>
+                          <TablesContextProvider
+                            initialTables={diagramData?.tables || []}
+                            initialRelationships={diagramData?.references || []}
+                            initialDatabase={diagramData?.database || 'GENERIC'}
+                          >
+                            <SaveStateContextProvider>
+                              <ReadOnlyContextProvider initialReadOnly={true}>
+                                <CanvasContextProvider className="h-full w-full preview-canvas">
+                                  <Canvas />
+                                </CanvasContextProvider>
+                              </ReadOnlyContextProvider>
+                            </SaveStateContextProvider>
+                          </TablesContextProvider>
+                        </EnumsContextProvider>
+                      </TypesContextProvider>
+                    </NotesContextProvider>
+                  </AreasContextProvider>
+                </TasksContextProvider>
+              </SelectContextProvider>
+            </UndoRedoContextProvider>
+          </TransformContextProvider>
+        </LayoutContextProvider>
+      </div>
+    );
+  };
+
   return (
     <Card
       className="diagram-card hover:shadow-md transition-shadow duration-300 dark:shadow-gray-800"
@@ -179,11 +328,16 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
       <div className="flex flex-col h-full">
         <div 
           style={{ height: '200px' }}
+          onClick={handleView}
+          className="preview-card-canvas-container"
         >
-          <DiagramPreviewThumb 
-            diagram={diagramData} 
-            onClick={handleView}
-          />
+          {loading ? (
+            <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-gray-800 rounded-lg">
+              <div className="spinner"></div>
+            </div>
+          ) : (
+            renderCanvasPreview()
+          )}
         </div>
         
         <div className="mt-2">
@@ -208,7 +362,13 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
               className="text-color-secondary text-xs block mt-1" 
               type="tertiary"
             >
-              {formattedUpdateTime}
+              {t('last_modified')}: {formattedUpdateTime}
+            </Typography.Text>
+            <Typography.Text 
+              className="text-color-secondary text-xs block mt-1" 
+              type="tertiary"
+            >
+              {t('created')}: {formattedCreateTime}
             </Typography.Text>
           </div>
         </div>
@@ -245,6 +405,26 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
       </div>
     </Card>
   );
+};
+
+// 创建一个内部组件来控制缩放
+const PreviewZoomController = ({ zoom, pan }) => {
+  const { setTransform } = useTransform();
+  
+  // 组件挂载后立即设置缩放值
+  useEffect(() => {
+    // 使用setTimeout确保在TransformContext完全初始化后执行
+    const timer = setTimeout(() => {
+      setTransform({
+        zoom: zoom,
+        pan: pan
+      });
+    }, 50);
+    
+    return () => clearTimeout(timer);
+  }, [zoom, pan, setTransform]);
+  
+  return null; // 这个组件不渲染任何内容
 };
 
 export default DiagramPreviewCard; 

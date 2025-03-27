@@ -160,6 +160,9 @@ const en = {
     create: "Create",
     confirm: "Confirm",
     last_modified: "Last modified",
+    created: "Created",
+    create_time: "Creation time",
+    no_create_time: "No creation time",
     drag_and_drop_files: "Drag and drop the file here or click to upload.",
     upload_sql_to_generate_diagrams:
       "Upload an sql file to autogenerate your tables and columns.",

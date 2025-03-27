@@ -14,7 +14,6 @@ const getAllDiagrams = async (req, res) => {
   try {
     // 后续可添加用户认证，筛选当前用户的图表
     const diagrams = await Diagram.findAll({
-      attributes: ['id', 'name', 'database', 'lastModified', 'gistId'],
       order: [['lastModified', 'DESC']]
     });
     
