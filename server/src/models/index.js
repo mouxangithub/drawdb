@@ -28,14 +28,11 @@ const sequelize = new Sequelize(dbConfig);
 
 // 导入模型
 import DiagramModel from './diagram.js';
-import TemplateModel from './template.js';
 
 const Diagram = DiagramModel(sequelize);
-const Template = TemplateModel(sequelize);
 
 // 导出模型和sequelize实例
 export {
   sequelize,
   Diagram,
-  Template,
 }; 

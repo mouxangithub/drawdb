@@ -742,25 +742,6 @@ export default function ControlPanel({
         function: saveDiagramAs,
         shortcut: "Ctrl+Shift+S",
       },
-      save_as_template: {
-        function: () => {
-          db.templates
-            .add({
-              title: title,
-              tables: tables,
-              database: database,
-              relationships: relationships,
-              notes: notes,
-              subjectAreas: areas,
-              custom: 1,
-              ...(databases[database].hasEnums && { enums: enums }),
-              ...(databases[database].hasTypes && { types: types }),
-            })
-            .then(() => {
-              Toast.success(t("template_saved"));
-            });
-        },
-      },
       rename: {
         function: () => {
           setModal(MODAL.RENAME);

@@ -15,5 +15,9 @@ export default defineConfig({
         changeOrigin: true,
       }
     }
+  },
+  build: {
+    // 提高警告阈值到 80000kB
+    chunkSizeWarningLimit: 80000,
   }
 })

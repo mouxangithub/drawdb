@@ -1,0 +1,258 @@
+/* 缩放控件样式 */
+.zoom-control-container {
+  background-color: var(--semi-color-bg-2, #f5f5f5);
+  border: 1px solid var(--semi-color-border, #e1e1e1);
+  transition: all 0.3s ease;
+}
+
+/* 深色模式下的背景 */
+:root[theme-mode="dark"] .zoom-control-container {
+  background-color: var(--semi-color-bg-2, #303030);
+  border-color: var(--semi-color-border, #424242);
+}
+
+/* 缩放输入框 */
+.zoom-input {
+  color: var(--semi-color-text-0, #222);
+  background-color: transparent;
+}
+
+.zoom-input:focus {
+  border-color: var(--semi-color-primary, #1890ff) !important;
+  background-color: var(--semi-color-bg-0, #fff);
+}
+
+/* 深色模式下的输入框 */
+:root[theme-mode="dark"] .zoom-input {
+  color: var(--semi-color-text-0, #e9e9e9);
+}
+
+:root[theme-mode="dark"] .zoom-input:focus {
+  background-color: var(--semi-color-bg-0, #1c1c1c);
+}
+
+/* 缩放按钮 */
+.zoom-button {
+  color: var(--semi-color-text-0, #222);
+  background-color: transparent;
+  border: none !important;
+}
+
+.zoom-button:hover {
+  background-color: var(--semi-color-fill-0, #e1e1e1) !important;
+}
+
+/* 深色模式下的按钮 */
+:root[theme-mode="dark"] .zoom-button {
+  color: var(--semi-color-text-0, #e9e9e9);
+}
+
+:root[theme-mode="dark"] .zoom-button:hover {
+  background-color: var(--semi-color-fill-0, #424242) !important;
+}
+
+/* 文本颜色 */
+.text-color {
+  color: var(--semi-color-text-0, #222);
+}
+
+:root[theme-mode="dark"] .text-color {
+  color: var(--semi-color-text-0, #e9e9e9);
+}
+
+/* 无障碍性支持 */
+@media (prefers-contrast: more) {
+  .zoom-control-container {
+    border-width: 2px;
+  }
+  
+  .zoom-input:focus {
+    border-width: 2px;
+  }
+}
+
+/* RTL支持 */
+[dir="rtl"] .zoom-control-container {
+  direction: rtl;
+}
+
+/* 控制面板样式 */
+.control-panel {
+  background-color: rgba(245, 245, 245, 0.75);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 深色模式下的控制面板 */
+:root[theme-mode="dark"] .control-panel {
+  background-color: rgba(30, 30, 30, 0.75);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 控制按钮样式 */
+.control-button {
+  background-color: var(--semi-color-bg-2, #f5f5f5) !important;
+  border: 1px solid var(--semi-color-border, #e1e1e1) !important;
+  color: var(--semi-color-text-0, #222) !important;
+}
+
+.control-button:hover {
+  background-color: var(--semi-color-fill-0, #e1e1e1) !important;
+}
+
+/* 深色模式下的控制按钮 */
+:root[theme-mode="dark"] .control-button {
+  background-color: var(--semi-color-bg-2, #303030) !important;
+  border-color: var(--semi-color-border, #424242) !important;
+  color: var(--semi-color-text-0, #e9e9e9) !important;
+}
+
+:root[theme-mode="dark"] .control-button:hover {
+  background-color: var(--semi-color-fill-0, #424242) !important;
+}
+
+/* 主按钮样式 */
+.control-button-primary {
+  background-color: var(--semi-color-primary, #1890ff) !important;
+  border-color: var(--semi-color-primary, #1890ff) !important;
+  color: #fff !important;
+}
+
+.control-button-primary:hover {
+  background-color: var(--semi-color-primary-hover, #40a9ff) !important;
+  border-color: var(--semi-color-primary-hover, #40a9ff) !important;
+}
+
+/* 深色模式下的主按钮 */
+:root[theme-mode="dark"] .control-button-primary {
+  background-color: var(--semi-color-primary, #1890ff) !important;
+  border-color: var(--semi-color-primary, #1890ff) !important;
+}
+
+:root[theme-mode="dark"] .control-button-primary:hover {
+  background-color: var(--semi-color-primary-hover, #40a9ff) !important;
+  border-color: var(--semi-color-primary-hover, #40a9ff) !important;
+}
+
+/* 居中的控制面板样式 */
+.centered-control-panel {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(8px);
+  padding: 10px 16px;
+  min-width: 320px;
+  justify-content: center;
+}
+
+/* 深色模式下的居中控制面板 */
+:root[theme-mode="dark"] .centered-control-panel {
+  background-color: rgba(30, 30, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* 在居中控制面板中的缩放控件样式 */
+.centered-control-panel .zoom-control-container {
+  margin-right: 12px;
+  border: none;
+  background-color: transparent;
+}
+
+:root[theme-mode="dark"] .centered-control-panel .zoom-control-container {
+  background-color: transparent;
+  border: none;
+}
+
+/* 在居中控制面板中的按钮样式 */
+.centered-control-panel .control-button,
+.centered-control-panel .control-button-primary,
+.centered-control-panel .zoom-button {
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.centered-control-panel .control-button:hover,
+.centered-control-panel .zoom-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+}
+
+.centered-control-panel .control-button-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 8px rgba(24, 144, 255, 0.3);
+}
+
+/* 深色模式下的按钮悬停效果 */
+:root[theme-mode="dark"] .centered-control-panel .control-button:hover,
+:root[theme-mode="dark"] .centered-control-panel .zoom-button:hover {
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+}
+
+:root[theme-mode="dark"] .centered-control-panel .control-button-primary:hover {
+  box-shadow: 0 3px 8px rgba(24, 144, 255, 0.5);
+}
+
+/* 信息面板样式 */
+.info-panel {
+  background-color: rgba(245, 245, 245, 0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  max-width: 300px;
+  transition: all 0.3s ease;
+}
+
+/* 深色模式下的信息面板 */
+:root[theme-mode="dark"] .info-panel {
+  background-color: rgba(30, 30, 30, 0.85);
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 全屏模式下的信息面板定位调整 */
+:fullscreen .info-panel {
+  bottom: 24px;
+  right: 24px;
+}
+
+/* 浏览器前缀兼容 */
+:-webkit-full-screen .info-panel {
+  bottom: 24px;
+  right: 24px;
+}
+
+:-ms-fullscreen .info-panel {
+  bottom: 24px;
+  right: 24px;
+}
+
+/* 无障碍性支持 */
+@media (prefers-contrast: more) {
+  .info-panel {
+    border-width: 2px;
+    background-color: rgba(245, 245, 245, 0.95);
+  }
+  
+  :root[theme-mode="dark"] .info-panel {
+    background-color: rgba(30, 30, 30, 0.95);
+    border-width: 2px;
+  }
+}
+
+/* RTL支持 */
+[dir="rtl"] .info-panel {
+  right: auto;
+  left: 16px;
+  align-items: flex-start;
+}
+
+[dir="rtl"]:fullscreen .info-panel,
+[dir="rtl"]:-webkit-full-screen .info-panel,
+[dir="rtl"]:-ms-fullscreen .info-panel {
+  right: auto;
+  left: 24px;
+} 

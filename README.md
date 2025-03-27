@@ -42,6 +42,7 @@ Compared to the original project, this fork adds several key features:
 - **Docker Deployment**: Complete Docker support for easy deployment
 - **Automated Backups**: Built-in database backup functionality
 - **Enhanced Preview**: Interactive diagram preview with zoom and pan capabilities
+- **Optimized UI**: Refined user interface with control panel centered at bottom and floating info panel
 
 ## ✨ Core Features
 

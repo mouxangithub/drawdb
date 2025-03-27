@@ -19,13 +19,9 @@ const __dirname = dirname(__filename);
 
 // 导入路由
 import diagramRoutes from './routes/diagrams.js';
-import templateRoutes from './routes/templates.js';
 
 // 导入数据库连接
 import { sequelize } from './models/index.js';
-
-// 导入种子数据控制器
-import { importTemplateSeeds } from './controllers/seedController.js';
 
 // 加载环境变量（从项目根目录）
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
@@ -84,7 +80,6 @@ app.get(`${apiBasePath}/docs/swagger-ui-init.js`, (req, res, next) => {
 
 // API路由
 app.use(`${apiBasePath}/diagrams`, diagramRoutes);
-app.use(`${apiBasePath}/templates`, templateRoutes);
 
 // 获取静态文件路径
 function getStaticFilesPath() {
@@ -286,12 +281,6 @@ async function startServer() {
     const dbExists = fs.existsSync(dbPath);
     // 同步数据库模型
     await sequelize.sync();
-
-    // 导入种子数据（仅在首次创建数据库时）
-    if (!dbExists) {
-      console.log('首次运行，初始化数据库中...');
-      await importTemplateSeeds();
-    }
 
     // 启动服务器
     app.listen(PORT, () => {

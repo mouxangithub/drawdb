@@ -251,7 +251,7 @@ const en = {
     supported_types: "Supported file types:",
     column: "Column",
     diagram_list: "Diagram List",
-    diagram_list_welcome: "Welcome to drawDB database design tool. Here you can manage all your database diagram designs.",
+    diagram_list_welcome: "Welcome to drawDB. Manage all your database diagrams here.",
     type_description: "Type description",
     add_attr: "Add attribute",
     add_method: "Add method",
@@ -274,7 +274,7 @@ const en = {
     // DiagramList页面
     diagram_name: "Diagram Name",
     database_type: "Database Type",
-    last_modified_time: "Last Modified Time",
+    last_modified_time: "Last Modified",
     actions: "Actions",
     edit: "Edit",
     copy: "Copy",
@@ -289,9 +289,9 @@ const en = {
     search_diagram: "Search diagrams",
     new_diagram: "New Diagram",
     try_editor: "Try Editor",
-    no_diagram_data: "No diagram data",
-    no_matching_diagrams: "No matching diagrams found",
-    click_to_create: "Click \"New Diagram\" to start your design",
+    no_diagram_data: "No diagrams yet",
+    no_matching_diagrams: "No matching diagrams",
+    click_to_create: "Click the button below to create your first diagram",
     share_diagram: "Share Diagram",
     share_title: "Share Title",
     share_link: "Share Link",
@@ -301,13 +301,21 @@ const en = {
     share_link_copied: "Share link copied to clipboard",
     copy_share_link_failed: "Failed to copy share link",
     confirm_delete: "Confirm Delete",
-    confirm_delete_diagram: "Are you sure to delete this diagram?",
+    confirm_delete_diagram: "Are you sure you want to delete {{name}}?",
     operation_irreversible: "This operation is irreversible",
     get_diagram_list_failed: "Failed to get diagram list",
     generic: "Generic",
     link_removed: "Link removed",
     link_updated: "Link updated",
     update_link: "Update link",
+    get_diagram_detail_failed: "Failed to get diagram details",
+    diagram_has_no_tables: "This diagram has no tables",
+    this_diagram: "this diagram",
+    diagram_illustration: "Database diagram illustration",
+    
+    // Display modes
+    display_as_grid: "Grid view",
+    display_as_table: "Table view"
   },
 };
 

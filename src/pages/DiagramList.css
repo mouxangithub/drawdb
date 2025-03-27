@@ -1,0 +1,221 @@
+/* 空状态图形的样式 */
+.empty-diagram-illustration {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 20px;
+  position: relative;
+}
+
+/* 添加边框效果 */
+.empty-diagram-illustration::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  height: 160px;
+  border: 2px dashed #1890ff;
+  border-radius: 8px;
+  opacity: 0.3;
+  z-index: 0;
+}
+
+/* 暗色主题下的边框适配 */
+:root[theme-mode="dark"] .empty-diagram-illustration::after {
+  border-color: #4c95df;
+}
+
+.empty-diagram-illustration svg {
+  max-width: 100%;
+  transform-origin: center;
+  animation: float 5s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+/* 暗色主题下的颜色适配 */
+:root[theme-mode="dark"] .empty-diagram-illustration svg .db-shape,
+:root[theme-mode="dark"] .empty-diagram-illustration svg .table-shape,
+:root[theme-mode="dark"] .empty-diagram-illustration svg .connection-line,
+:root[theme-mode="dark"] .empty-diagram-illustration svg .table-row {
+  stroke: #4c95df;
+}
+
+/* 暗色主题下的背景适配 */
+:root[theme-mode="dark"] .empty-diagram-illustration svg .bg-shape {
+  fill: #1a2030;
+}
+
+/* 浮动动画效果 */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+/* 让线条有呼吸效果 */
+.empty-diagram-illustration svg .db-shape,
+.empty-diagram-illustration svg .table-shape,
+.empty-diagram-illustration svg .connection-line,
+.empty-diagram-illustration svg .table-row {
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% {
+    stroke-opacity: 0.6;
+  }
+  50% {
+    stroke-opacity: 1;
+  }
+  100% {
+    stroke-opacity: 0.6;
+  }
+}
+
+/* 为不同的元素设置不同的动画延迟，产生交错效果 */
+.empty-diagram-illustration svg .db-shape {
+  animation-delay: 0.2s;
+}
+
+.empty-diagram-illustration svg .table-shape {
+  animation-delay: 0.6s;
+}
+
+.empty-diagram-illustration svg .connection-line {
+  animation-delay: 1s;
+}
+
+.empty-diagram-illustration svg .table-row {
+  animation-delay: 1.4s;
+}
+
+/* 空状态创建按钮样式 */
+.empty-state-create-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border: 2px dashed #1890ff;
+  background-color: rgba(24, 144, 255, 0.05);
+  border-radius: 8px;
+  color: #1890ff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 16px;
+  font-weight: 500;
+  gap: 10px;
+  min-width: 200px;
+  animation: button-pulse 4s ease-in-out infinite;
+}
+
+/* 按钮呼吸动画 */
+@keyframes button-pulse {
+  0% {
+    border-color: rgba(24, 144, 255, 0.6);
+  }
+  50% {
+    border-color: rgba(24, 144, 255, 1);
+  }
+  100% {
+    border-color: rgba(24, 144, 255, 0.6);
+  }
+}
+
+/* 暗色主题下的按钮动画 */
+@keyframes button-pulse-dark {
+  0% {
+    border-color: rgba(76, 149, 223, 0.6);
+  }
+  50% {
+    border-color: rgba(76, 149, 223, 1);
+  }
+  100% {
+    border-color: rgba(76, 149, 223, 0.6);
+  }
+}
+
+.empty-state-create-button span {
+  margin-left: 8px;
+}
+
+.empty-state-create-button:hover {
+  background-color: rgba(24, 144, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(24, 144, 255, 0.1);
+  animation: none;
+}
+
+.empty-state-create-button:active {
+  transform: translateY(0);
+}
+
+/* 暗色主题下的按钮样式 */
+:root[theme-mode="dark"] .empty-state-create-button {
+  border-color: #4c95df;
+  color: #4c95df;
+  background-color: rgba(76, 149, 223, 0.1);
+  animation: button-pulse-dark 4s ease-in-out infinite;
+}
+
+:root[theme-mode="dark"] .empty-state-create-button:hover {
+  background-color: rgba(76, 149, 223, 0.15);
+  box-shadow: 0 6px 12px rgba(76, 149, 223, 0.15);
+  animation: none;
+}
+
+/* RTL (Right-to-Left) 支持 */
+/* 为支持从右到左的语言（如阿拉伯语、希伯来语等）适配样式 */
+[dir="rtl"] .empty-state-create-button span {
+  margin-left: 0;
+  margin-right: 8px;
+}
+
+/* 高对比度主题支持 */
+@media (prefers-contrast: more) {
+  .empty-diagram-illustration::after {
+    border-width: 3px;
+    opacity: 0.6;
+  }
+  
+  .empty-state-create-button {
+    border-width: 3px;
+  }
+  
+  .empty-diagram-illustration svg .db-shape,
+  .empty-diagram-illustration svg .table-shape,
+  .empty-diagram-illustration svg .connection-line,
+  .empty-diagram-illustration svg .table-row {
+    stroke-width: 3px;
+    stroke-opacity: 0.9;
+  }
+}
+
+/* 减少动画支持 */
+@media (prefers-reduced-motion: reduce) {
+  .empty-diagram-illustration svg,
+  .empty-state-create-button {
+    animation: none;
+  }
+  
+  .empty-diagram-illustration svg .db-shape,
+  .empty-diagram-illustration svg .table-shape,
+  .empty-diagram-illustration svg .connection-line,
+  .empty-diagram-illustration svg .table-row {
+    animation: none;
+    stroke-opacity: 1;
+  }
+  
+  .empty-state-create-button:hover {
+    transform: none;
+  }
+} 

@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import ShareModal from '../components/common/ShareModal';
 import DiagramPreviewCard from '../components/common/DiagramPreviewCard';
 import DiagramViewModal from '../components/common/DiagramViewModal';
+import './DiagramList.css'; // 添加CSS导入
 
 /**
  * 图表列表页面
@@ -245,6 +246,7 @@ export default function DiagramList() {
               onChange={setSearchTerm}
               style={{ width: '300px' }}
               className="text-color"
+              aria-label={t('search_diagram')}
             />
             <div className="flex items-center">
               <Button
@@ -252,11 +254,15 @@ export default function DiagramList() {
                 type={displayMode === 'grid' ? 'primary' : 'tertiary'}
                 onClick={() => handleModeChange('grid')}
                 className="me-2"
+                aria-label={t('display_as_grid')}
+                aria-pressed={displayMode === 'grid'}
               />
               <Button
                 icon={<IconArticle />}
                 type={displayMode === 'table' ? 'primary' : 'tertiary'}
                 onClick={() => handleModeChange('table')}
+                aria-label={t('display_as_table')}
+                aria-pressed={displayMode === 'table'}
               />
             </div>
           </div>
@@ -264,6 +270,7 @@ export default function DiagramList() {
             icon={<IconPlus />}
             type="primary"
             onClick={handleCreateDiagram}
+            aria-label={t('new_diagram')}
           >
             {t('new_diagram')}
           </Button>
@@ -284,13 +291,61 @@ export default function DiagramList() {
           </div>
         ) : filteredDiagrams.length === 0 ? (
           <Empty
-            image={<div className="semi-empty-image"></div>}
+            image={
+              <div className="empty-diagram-illustration">
+                <svg width="160" height="120" viewBox="0 0 160 120" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label={t('diagram_illustration')}>
+                  {/* 背景 */}
+                  <rect x="0" y="0" width="160" height="120" rx="4" fill="#f0f7ff" className="bg-shape" filter="url(#shadow)" />
+                  
+                  {/* 过滤器 - 阴影效果 */}
+                  <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+                    <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.1" />
+                  </filter>
+                  
+                  {/* 数据库图标 */}
+                  <ellipse cx="80" cy="30" rx="35" ry="15" stroke="#1890ff" strokeWidth="2" fill="transparent" className="db-shape"/>
+                  <line x1="45" y1="30" x2="45" y2="65" stroke="#1890ff" strokeWidth="2" className="db-shape"/>
+                  <line x1="115" y1="30" x2="115" y2="65" stroke="#1890ff" strokeWidth="2" className="db-shape"/>
+                  <ellipse cx="80" cy="65" rx="35" ry="15" stroke="#1890ff" strokeWidth="2" fill="transparent" className="db-shape"/>
+                  
+                  {/* 表格连线 */}
+                  <rect x="25" y="90" width="35" height="25" rx="2" stroke="#1890ff" strokeWidth="2" fill="transparent" className="table-shape"/>
+                  <rect x="100" y="90" width="35" height="25" rx="2" stroke="#1890ff" strokeWidth="2" fill="transparent" className="table-shape"/>
+                  
+                  {/* 连接线 */}
+                  <path d="M45 65 L42.5 90" stroke="#1890ff" strokeWidth="1.5" strokeDasharray="3 2" className="connection-line"/>
+                  <path d="M115 65 L117.5 90" stroke="#1890ff" strokeWidth="1.5" strokeDasharray="3 2" className="connection-line"/>
+                  
+                  {/* 表中的行 */}
+                  <line x1="28" y1="97" x2="57" y2="97" stroke="#1890ff" strokeWidth="1" className="table-row"/>
+                  <line x1="28" y1="103" x2="52" y2="103" stroke="#1890ff" strokeWidth="1" className="table-row"/>
+                  <line x1="28" y1="109" x2="55" y2="109" stroke="#1890ff" strokeWidth="1" className="table-row"/>
+                  
+                  <line x1="103" y1="97" x2="132" y2="97" stroke="#1890ff" strokeWidth="1" className="table-row"/>
+                  <line x1="103" y1="103" x2="127" y2="103" stroke="#1890ff" strokeWidth="1" className="table-row"/>
+                  <line x1="103" y1="109" x2="130" y2="109" stroke="#1890ff" strokeWidth="1" className="table-row"/>
+                </svg>
+              </div>
+            }
             title={t('no_diagram_data')}
             description={
               searchTerm ? t('no_matching_diagrams') : t('click_to_create')
             }
             className="text-color"
-          />
+          >
+            {!searchTerm && (
+              <div className="mt-6">
+                <button 
+                  className="empty-state-create-button"
+                  onClick={handleCreateDiagram}
+                  aria-label={t('new_diagram')}
+                >
+                  <IconPlus size="large" aria-hidden="true" />
+                  <span>{t('new_diagram')}</span>
+                </button>
+              </div>
+            )}
+          </Empty>
         ) : (
           <>
             {displayMode === 'grid' ? (
@@ -307,13 +362,13 @@ export default function DiagramList() {
                 ))}
               </div>
             ) : (
-              <table className="w-full border-collapse text-color">
+              <table className="w-full border-collapse text-color" role="grid" aria-label={t('diagram_list')}>
                 <thead>
                   <tr className="border-b border-color">
-                    <th className="px-4 py-2 text-left">{t('diagram_name')}</th>
-                    <th className="px-4 py-2 text-left">{t('database_type')}</th>
-                    <th className="px-4 py-2 text-left">{t('last_modified_time')}</th>
-                    <th className="px-4 py-2 text-right">{t('actions')}</th>
+                    <th className="px-4 py-2 text-left" scope="col">{t('diagram_name')}</th>
+                    <th className="px-4 py-2 text-left" scope="col">{t('database_type')}</th>
+                    <th className="px-4 py-2 text-left" scope="col">{t('last_modified_time')}</th>
+                    <th className="px-4 py-2 text-right" scope="col">{t('actions')}</th>
                   </tr>
                 </thead>
                 <tbody>

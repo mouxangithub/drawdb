@@ -264,17 +264,25 @@ const zh = {
     search_diagram: "搜索图表",
     new_diagram: "新建图表",
     try_editor: "试用编辑器",
-    no_diagram_data: "无图表数据",
-    no_matching_diagrams: "没有找到匹配的图表",
-    click_to_create: "点击\"新建图表\"开始您的设计",
-    confirm_delete: "确定删除",
-    confirm_delete_diagram: "确定要删除这个图表吗？",
+    no_diagram_data: "暂无图表数据",
+    no_matching_diagrams: "没有匹配的图表",
+    click_to_create: "点击下方按钮创建您的第一个图表",
+    confirm_delete: "确认删除",
+    confirm_delete_diagram: "确定要删除 {{name}} 吗？",
     operation_irreversible: "此操作不可撤销",
     get_diagram_list_failed: "获取图表列表失败",
+    get_diagram_detail_failed: "获取图表详情失败",
     generic: "通用",
     update_link: "更新链接",
     copy_link: "复制链接",
     unsigned: "无符号",
+    diagram_has_no_tables: "此图表没有表格数据",
+    this_diagram: "此图表",
+    diagram_illustration: "数据库图表示意图",
+    
+    // 显示模式
+    display_as_grid: "网格视图",
+    display_as_table: "表格视图"
   },
 };
 

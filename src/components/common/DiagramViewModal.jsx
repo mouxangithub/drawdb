@@ -23,6 +23,7 @@ import EnumsContextProvider from '../../context/EnumsContext';
 import TypesContextProvider from '../../context/TypesContext';
 import TasksContextProvider from '../../context/TasksContext';
 import { ReadOnlyContextProvider } from '../../context/ReadOnlyContext';
+import './DiagramViewModal.css'; // 导入CSS样式
 
 /**
  * 计算合适的初始视图参数
@@ -172,12 +173,13 @@ const ZoomControl = ({ transform, setTransform }) => {
   };
 
   return (
-    <div className="bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center mr-2" style={{ height: '40px' }}>
+    <div className="zoom-control-container rounded-lg flex items-center" style={{ height: '40px' }}>
       <Button
         icon={<IconMinus />}
         size="large"
         onClick={handleZoomOut}
         aria-label={t('zoom_out')}
+        className="zoom-button"
       />
       <div
         style={{
@@ -193,6 +195,7 @@ const ZoomControl = ({ transform, setTransform }) => {
           onChange={handleInputChange}
           onBlur={handleInputConfirm}
           onKeyDown={handleInputConfirm}
+          className="zoom-input text-color"
           style={{
             width: '50px',
             textAlign: 'center',
@@ -206,14 +209,50 @@ const ZoomControl = ({ transform, setTransform }) => {
           onFocus={(e) => e.target.select()}
           onClick={(e) => e.stopPropagation()}
         />
-        <span style={{ fontWeight: 'bold' }}>%</span>
+        <span className="text-color" style={{ fontWeight: 'bold' }}>%</span>
       </div>
       <Button
         icon={<IconPlus />}
         size="large"
         onClick={handleZoomIn}
         aria-label={t('zoom_in')}
+        className="zoom-button"
       />
+    </div>
+  );
+};
+
+/**
+ * 添加一个新的InfoPanel组件
+ * @param {Object} props - 组件属性
+ * @param {Object} props.diagram - 图表数据
+ */
+const InfoPanel = ({ diagram }) => {
+  const { t } = useTranslation();
+  
+  if (!diagram) return null;
+  
+  return (
+    <div className="info-panel" style={{
+      position: 'absolute',
+      right: '16px',
+      bottom: '16px',
+      zIndex: 999,
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-end'
+    }}>
+      <Typography.Title heading={5} className="text-color m-0">
+        {diagram.name || t('untitled_diagram')}
+      </Typography.Title>
+      <Typography.Text className="text-color">
+        {databases[diagram.database]?.name || diagram.database || t('generic')}
+      </Typography.Text>
+      {(diagram.updatedAt || diagram.lastModified) && (
+        <Typography.Text type="tertiary" className="text-color">
+          {t('last_modified')}: {formatDateTime(diagram.updatedAt || diagram.lastModified)}
+        </Typography.Text>
+      )}
     </div>
   );
 };
@@ -242,59 +281,52 @@ const ControlPanel = ({ isFullScreen, toggleFullScreen, onShare, onEdit, loading
   };
 
   return (
-    <div style={{
+    <div className="control-panel centered-control-panel" style={{
       position: 'absolute',
-      left: '16px',
+      left: '50%',
       bottom: '16px',
+      transform: 'translateX(-50%)',
       zIndex: 1000,
       display: 'flex',
-      flexDirection: 'row'
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: '8px'
     }}>
-      {isFullScreen ? (
-        <div className="flex flex-row items-center">
-          <div className="bg-gray-100 dark:bg-gray-800 p-2 rounded-lg flex items-center">
-            <ZoomControl transform={transform} setTransform={setTransform} />
-            <Button
-              icon={<IconFullScreenStroked style={{ transform: 'rotate(180deg)' }} />}
-              size="large"
-              onClick={handleButtonClick(toggleFullScreen)}
-              className="mr-4"
-            >
-              {t('exit_fullscreen')}
-            </Button>
-            <div className="flex items-center ml-auto">
-              <Button
-                icon={<IconShareStroked />}
-                size="large"
-                onClick={handleButtonClick(onShare)}
-                disabled={loading || !diagram}
-                className="mr-2"
-              >
-                {t('share')}
-              </Button>
-              <Button
-                icon={<IconEdit />}
-                type="primary"
-                size="large"
-                onClick={handleButtonClick(onEdit)}
-                disabled={loading || !diagram}
-              >
-                {t('edit')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="flex flex-row items-center">
+      {!loading && (
+        <>
           <ZoomControl transform={transform} setTransform={setTransform} />
+
           <Button
+            className="control-button"
             icon={<IconFullScreenStroked />}
             size="large"
             onClick={handleButtonClick(toggleFullScreen)}
+            aria-label={isFullScreen ? t('exit_fullscreen') : t('fullscreen')}
           >
-            {t('fullscreen')}
+            {isFullScreen ? t('exit_fullscreen') : t('fullscreen')}
           </Button>
-        </div>
+          
+          <Button
+            className="control-button"
+            icon={<IconShareStroked />}
+            size="large"
+            onClick={handleButtonClick(onShare)}
+            aria-label={t('share')}
+          >
+            {t('share')}
+          </Button>
+          
+          <Button
+            className="control-button-primary"
+            icon={<IconEdit />}
+            type="primary"
+            size="large"
+            onClick={handleButtonClick(onEdit)}
+            aria-label={t('edit')}
+          >
+            {t('edit')}
+          </Button>
+        </>
       )}
     </div>
   );
@@ -381,49 +413,56 @@ const DiagramViewModal = ({ visible, diagram, onClose, onEdit, onShare }) => {
   }, [diagram, isFullScreen, onShare, t]);
 
   // 处理全屏切换
-  const toggleFullScreen = useCallback(() => {
+  const toggleFullScreen = () => {
+    const container = document.querySelector('.diagram-canvas-container');
+    if (!container) return;
+
     if (!isFullScreen) {
-      const canvasContainer = document.querySelector('.diagram-canvas-container');
-      if (canvasContainer && canvasContainer.requestFullscreen) {
-        canvasContainer.requestFullscreen().catch(err => {
-          console.error(`全屏错误: ${err.message}`);
-        });
-      } else if (canvasContainer && canvasContainer.webkitRequestFullscreen) {
-        canvasContainer.webkitRequestFullscreen();
-      } else if (canvasContainer && canvasContainer.msRequestFullscreen) {
-        canvasContainer.msRequestFullscreen();
+      // 进入全屏
+      if (container.requestFullscreen) {
+        container.requestFullscreen();
+      } else if (container.mozRequestFullScreen) {
+        container.mozRequestFullScreen();
+      } else if (container.webkitRequestFullscreen) {
+        container.webkitRequestFullscreen();
+      } else if (container.msRequestFullscreen) {
+        container.msRequestFullscreen();
       }
     } else {
+      // 退出全屏
       if (document.exitFullscreen) {
-        document.exitFullscreen().catch(err => {
-          console.error(`退出全屏错误: ${err.message}`);
-        });
+        document.exitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
       } else if (document.webkitExitFullscreen) {
         document.webkitExitFullscreen();
       } else if (document.msExitFullscreen) {
         document.msExitFullscreen();
       }
     }
-    setIsFullScreen(prev => !prev);
-  }, [isFullScreen]);
+  };
 
   // 监听全屏状态变化
   useEffect(() => {
-    const handleFullscreenChange = () => {
-      const isDocFullscreen = document.fullscreenElement ||
+    const handleFullScreenChange = () => {
+      setIsFullScreen(
+        document.fullscreenElement ||
+        document.mozFullScreenElement ||
         document.webkitFullscreenElement ||
-        document.msFullscreenElement;
-      setIsFullScreen(!!isDocFullscreen);
+        document.msFullscreenElement
+      );
     };
 
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
-    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+    document.addEventListener('fullscreenchange', handleFullScreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullScreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullScreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullScreenChange);
 
     return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
-      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('fullscreenchange', handleFullScreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullScreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullScreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullScreenChange);
     };
   }, []);
 
@@ -455,55 +494,19 @@ const DiagramViewModal = ({ visible, diagram, onClose, onEdit, onShare }) => {
       title={null}
       visible={visible}
       onCancel={onClose}
-      footer={
-        <div style={{ position: 'relative', zIndex: 1100 }}>
-          <Space className="flex justify-between items-center w-full">
-            <div className="flex flex-col items-start">
-              <Typography.Title heading={5} className="text-color m-0">
-                {diagram?.name || t('loading')}
-              </Typography.Title>
-              <Typography.Text className="text-color">
-                {diagram ? (databases[diagram.database]?.name || diagram.database || t('generic')) : ''}
-              </Typography.Text>
-              {diagram?.updatedAt && (
-                <Typography.Text type="tertiary" className="text-color">
-                  {t('last_modified')}: {formatDateTime(diagram.updatedAt || diagram.lastModified)}
-                </Typography.Text>
-              )}
-            </div>
-            <div>
-              <Button
-                icon={<IconShareStroked />}
-                onClick={handleShare}
-                disabled={loading || !diagram}
-              >
-                {t('share')}
-              </Button>
-              <Button
-                icon={<IconEdit />}
-                type="primary"
-                onClick={handleEdit}
-                disabled={loading || !diagram}
-              >
-                {t('edit')}
-              </Button>
-            </div>
-          </Space>
-        </div>
-      }
+      footer={null}
       className="diagram-view-modal"
       style={{
         '--semi-color-primary': 'var(--semi-color-primary)',
         '--semi-color-primary-hover': 'var(--semi-color-primary-hover)',
-        '--semi-modal-footer-z-index': '1500'
+        height: 'auto'
       }}
       width="85%"
       height="85%"
       centered
       bodyStyle={{
-        height: 'calc(85vh - 110px)',
+        height: 'calc(85vh - 60px)',
         overflow: 'hidden',
-        padding: 0,
         margin: '-24px -20px',
         position: 'relative'
       }}
@@ -568,6 +571,7 @@ const DiagramViewModal = ({ visible, diagram, onClose, onEdit, onShare }) => {
                                           diagram={diagram}
                                           needsReset={needsReset}
                                         />
+                                        <InfoPanel diagram={diagram} />
                                       </ReadOnlyContextProvider>
                                     </SaveStateContextProvider>
                                   </TablesContextProvider>
