@@ -41,8 +41,8 @@ const getApiPath = () => {
     return new URL(process.env.API_URL).pathname;
   } catch (e) {
     // 如果API_URL不是有效的URL，直接使用它作为路径
-    return process.env.API_URL.startsWith('/') 
-      ? process.env.API_URL 
+    return process.env.API_URL.startsWith('/')
+      ? process.env.API_URL
       : `/${process.env.API_URL}`;
   }
 };
@@ -67,10 +67,10 @@ app.use(`${apiBasePath}/docs`, (req, res, next) => {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
-  
+
   // 添加详细日志
   console.log(`[Swagger UI] 请求: ${req.method} ${req.url}`);
-  
+
   next();
 }, swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   explorer: true,
@@ -107,21 +107,9 @@ function getStaticFilesPath() {
   // 检查环境变量中配置的静态文件目录
   if (process.env.STATIC_FILES_DIR) {
     const envPath = path.resolve(process.env.STATIC_FILES_DIR);
-    console.log(`检查环境变量配置的路径: ${envPath}`);
     if (fs.existsSync(envPath)) {
-      console.log(`使用环境变量指定的静态文件路径: ${envPath}`);
       return envPath;
-    } else {
-      console.warn(`环境变量指定的路径不存在: ${envPath}`);
     }
-  }
-
-  // 首先检查已复制的前端文件目录
-  const publicPath = path.resolve(__dirname, '../../public');
-  console.log(`检查public目录: ${publicPath}`);
-  if (fs.existsSync(publicPath) && fs.existsSync(path.join(publicPath, 'index.html'))) {
-    console.log(`使用public目录作为静态文件路径: ${publicPath}`);
-    return publicPath;
   }
 
   // 检查其他可能的路径
@@ -134,38 +122,14 @@ function getStaticFilesPath() {
   ];
 
   for (const p of possiblePaths) {
-    console.log(`检查路径: ${p}`);
     if (fs.existsSync(p) && fs.existsSync(path.join(p, 'index.html'))) {
-      console.log(`找到有效的静态文件路径: ${p}`);
       return p;
     }
   }
-
-  // 如果所有路径都无效，返回默认路径
-  console.warn('没有找到有效的静态文件路径，返回默认路径');
   return path.resolve(process.cwd(), 'dist');
 }
 
 const staticFilesPath = getStaticFilesPath();
-
-// 服务前端静态文件
-console.log(`提供静态文件的目录: ${staticFilesPath}`);
-if (fs.existsSync(staticFilesPath)) {
-  const files = fs.readdirSync(staticFilesPath);
-  console.log(`静态目录中的文件: ${files.join(', ')}`);
-  
-  // 检查 index.html 是否存在
-  if (fs.existsSync(path.join(staticFilesPath, 'index.html'))) {
-    console.log('找到 index.html 文件');
-  } else {
-    console.warn('静态目录中没有 index.html 文件');
-  }
-} else {
-  console.error(`静态文件目录不存在: ${staticFilesPath}`);
-}
-
-// 设置静态文件服务中间件
-console.log(`设置静态文件服务路径: ${staticFilesPath}`);
 
 // 针对不同类型的静态资源设置不同的缓存策略
 const serveStaticWithCache = (directory, options = {}) => {
@@ -215,7 +179,7 @@ app.use('*.woff2', serveStaticWithCache(staticFilesPath, cacheSettings.media));
 
 // 服务根路由
 app.get('/api', (req, res) => {
-  res.json({ 
+  res.json({
     message: 'DrawDB API 服务已启动',
     version: '1.0.0'
   });
@@ -230,22 +194,22 @@ app.get('*', (req, res, next) => {
   }
 
   console.log(`[前端请求] 请求路径: ${req.originalUrl}`);
-  
+
   // 尝试提供入口文件
   const indexPath = path.join(staticFilesPath, 'index.html');
-  
+
   if (fs.existsSync(indexPath)) {
     console.log(`[前端请求] 返回主入口文件: ${indexPath}`);
     return res.sendFile(indexPath);
   }
-  
+
   // 如果主入口文件不存在，尝试其他可能的路径
   const alternativePaths = [
     path.join(__dirname, '../../public/index.html'),
     path.join(__dirname, '../../../dist/index.html'),
     path.join(process.cwd(), 'dist/index.html'),
   ];
-  
+
   for (const altPath of alternativePaths) {
     console.log(`[前端请求] 尝试替代路径: ${altPath}`);
     if (fs.existsSync(altPath)) {
@@ -253,98 +217,76 @@ app.get('*', (req, res, next) => {
       return res.sendFile(altPath);
     }
   }
-  
+
   // 如果所有路径都失败，返回错误消息
   console.error(`[前端请求] 无法找到入口文件，已检查的路径:
     - ${indexPath}
     ${alternativePaths.map(p => `    - ${p}`).join('\n')}
   `);
-  
+
   res.status(404).send(`
     <html>
-      <head><title>前端应用未找到</title></head>
+      <head>
+        <title>前端应用未找到</title>
+        <style>
+          body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+          }
+          h1 {
+            color: #e74c3c;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+          }
+          .message {
+            background-color: #f8f9fa;
+            border-left: 4px solid #2980b9;
+            padding: 15px;
+            margin: 20px 0;
+          }
+          code {
+            background: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+          }
+          ul {
+            background-color: #f8f9fa;
+            padding: 15px 15px 15px 35px;
+            border-radius: 5px;
+          }
+        </style>
+      </head>
       <body>
-        <h1>错误: 前端应用文件未找到</h1>
-        <p>服务器无法定位前端应用的入口文件 (index.html)。</p>
-        <p>已检查的路径:</p>
+        <h1>前端应用未找到</h1>
+        
+        <div class="message">
+          <strong>原因：</strong>服务器无法找到前端应用的打包文件 (index.html)。
+        </div>
+        
+        <h3>解决方法：</h3>
+        <p>请按照以下步骤操作：</p>
+        <ol>
+          <li>确保您已启动前端开发服务：在前端项目目录中运行 <code>npm run dev</code> 或 <code>yarn dev</code></li>
+          <li>如需构建前端项目：运行 <code>npm run build</code> 或 <code>yarn build</code></li>
+          <li>确保构建后的文件位于正确的目录中（通常是 <code>dist</code> 目录）</li>
+        </ol>
+        
+        <h3>已检查的路径:</h3>
         <ul>
           <li>${indexPath}</li>
           ${alternativePaths.map(p => `<li>${p}</li>`).join('\n')}
         </ul>
-        <p>请确保前端应用已构建并正确部署。</p>
+        
+        <p>如果您已经启动了前端服务，请直接访问前端服务的地址（默认通常为 <code>http://localhost:5173</code>）</p>
       </body>
     </html>
   `);
 });
-
-// 复制前端文件到服务器目录的函数
-const copyFrontendFiles = () => {
-  try {
-    // 可能的前端源位置
-    const possibleSources = [
-      path.resolve(process.cwd(), 'dist'),
-      path.resolve(__dirname, '../../../dist'),
-      path.resolve(__dirname, '../../dist')
-    ];
-    
-    // 目标位置
-    const targetDir = path.resolve(__dirname, '../../public');
-    
-    // 确保目标目录存在
-    if (!fs.existsSync(targetDir)) {
-      console.log(`创建目标目录: ${targetDir}`);
-      fs.mkdirSync(targetDir, { recursive: true });
-    }
-    
-    // 查找有效的源目录
-    let sourceDir = null;
-    for (const dir of possibleSources) {
-      if (fs.existsSync(dir) && fs.existsSync(path.join(dir, 'index.html'))) {
-        sourceDir = dir;
-        break;
-      }
-    }
-    
-    if (!sourceDir) {
-      console.warn('没有找到有效的前端源目录，跳过复制');
-      return;
-    }
-    
-    console.log(`从 ${sourceDir} 复制前端文件到 ${targetDir}`);
-    
-    // 读取源目录中的所有文件和子目录
-    const copyRecursive = (src, dest) => {
-      // 确保目标目录存在
-      if (!fs.existsSync(dest)) {
-        fs.mkdirSync(dest, { recursive: true });
-      }
-      
-      // 获取源目录中的所有项
-      const entries = fs.readdirSync(src, { withFileTypes: true });
-      
-      // 复制每一个项
-      for (const entry of entries) {
-        const srcPath = path.join(src, entry.name);
-        const destPath = path.join(dest, entry.name);
-        
-        if (entry.isDirectory()) {
-          // 递归复制子目录
-          copyRecursive(srcPath, destPath);
-        } else {
-          // 复制文件
-          fs.copyFileSync(srcPath, destPath);
-          console.log(`复制文件: ${srcPath} -> ${destPath}`);
-        }
-      }
-    };
-    
-    // 开始复制
-    copyRecursive(sourceDir, targetDir);
-    console.log('前端文件复制完成');
-  } catch (error) {
-    console.error('复制前端文件时出错:', error);
-  }
-};
 
 // 启动服务器
 async function startServer() {
@@ -353,39 +295,33 @@ async function startServer() {
     const dbPath = process.env.DB_STORAGE || 'server/database/drawdb.sqlite';
     const dbDir = path.dirname(dbPath);
     if (!fs.existsSync(dbDir)) {
-      console.log(`创建数据库目录: ${dbDir}`);
       fs.mkdirSync(dbDir, { recursive: true });
     }
-    
+
     // 检查数据库文件是否存在
     const dbExists = fs.existsSync(dbPath);
-    if (!dbExists) {
-      console.log(`数据库文件不存在，将在首次同步时创建: ${dbPath}`);
-    } else {
-      console.log(`使用现有数据库文件: ${dbPath}`);
-    }
-    
-    // 尝试复制前端文件
-    copyFrontendFiles();
-    
     // 同步数据库模型
     await sequelize.sync();
-    console.log('数据库连接成功并同步完成');
 
     // 导入种子数据（仅在首次创建数据库时）
     if (!dbExists) {
-      console.log('首次运行，导入初始模板数据');
+      console.log('首次运行，初始化数据库中...');
       await importTemplateSeeds();
-    } else {
-      console.log('使用现有数据库，跳过初始模板导入');
     }
 
     // 启动服务器
     app.listen(PORT, () => {
-      console.log(`服务器已启动，监听端口: ${PORT}`);
-      console.log(`API基础路径: ${apiBasePath}`);
-      console.log(`前端静态文件路径: ${staticFilesPath}`);
-      console.log(`数据库路径: ${dbPath}`);
+      console.log(`服务器已启动，监听端口: ${PORT}`);      
+      // 检查静态文件路径是否真的存在并包含index.html
+      if (!fs.existsSync(staticFilesPath) || !fs.existsSync(path.join(staticFilesPath, 'index.html'))) {
+        console.warn('\x1b[33m%s\x1b[0m', '警告: 前端静态文件未找到!');
+        console.warn('\x1b[33m%s\x1b[0m', '请执行以下操作之一:');
+        console.warn('\x1b[33m%s\x1b[0m', '1. 启动前端开发服务: 在前端项目目录中运行 npm run dev 或 yarn dev');
+        console.warn('\x1b[33m%s\x1b[0m', '2. 构建前端项目: 运行 npm run build 或 yarn build');
+        console.warn('\x1b[33m%s\x1b[0m', '前端开发服务默认地址通常为: http://localhost:5173');
+      } else {
+        console.log(`前端静态文件路径: ${staticFilesPath}`);
+      }
     });
   } catch (error) {
     console.error('服务器启动失败:', error);
