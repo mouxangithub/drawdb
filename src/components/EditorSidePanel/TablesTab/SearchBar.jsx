@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { useSelect } from "../../../hooks";
-import { TreeSelect } from "@douyinfe/semi-ui";
 import { IconSearch } from "@douyinfe/semi-icons";
 import { ObjectType } from "../../../data/constants";
 import { useTranslation } from "react-i18next";
+import CustomTreeSelect from "../../common/CustomTreeSelect";
 
 export default function SearchBar({ tables }) {
   const { setSelectedElement } = useSelect();
@@ -31,7 +31,7 @@ export default function SearchBar({ tables }) {
   }, [tables]);
 
   return (
-    <TreeSelect
+    <CustomTreeSelect
       searchPosition="trigger"
       dropdownStyle={{ maxHeight: 400, overflow: "auto" }}
       treeData={treeData}
@@ -60,6 +60,7 @@ export default function SearchBar({ tables }) {
       }}
       onChangeWithObject
       className="w-full"
+      autoFocus={false}
     />
   );
 }

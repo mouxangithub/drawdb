@@ -21,7 +21,7 @@ import {
 } from "../../hooks";
 import { useTranslation } from "react-i18next";
 
-export default function Note({ data, onPointerDown }) {
+export default function Note({ data, onPointerDown, readOnly = false }) {
   const w = 180;
   const r = 3;
   const fold = 24;
@@ -35,6 +35,8 @@ export default function Note({ data, onPointerDown }) {
   const { selectedElement, setSelectedElement } = useSelect();
 
   const handleChange = (e) => {
+    if (readOnly) return; // 只读模式下不允许更改内容
+    
     const textarea = document.getElementById(`note_${data.id}`);
     textarea.style.height = "0";
     textarea.style.height = textarea.scrollHeight + "px";
@@ -43,7 +45,9 @@ export default function Note({ data, onPointerDown }) {
   };
 
   const handleBlur = (e) => {
+    if (readOnly) return; // 只读模式下不允许更改内容
     if (e.target.value === editField.content) return;
+    
     const textarea = document.getElementById(`note_${data.id}`);
     textarea.style.height = "0";
     textarea.style.height = textarea.scrollHeight + "px";
@@ -66,6 +70,8 @@ export default function Note({ data, onPointerDown }) {
   };
 
   const edit = () => {
+    if (readOnly) return; // 只读模式下不允许编辑
+    
     setSelectedElement((prev) => ({
       ...prev,
       ...(layout.sidebar && { currentTab: Tab.NOTES }),
@@ -140,7 +146,7 @@ export default function Note({ data, onPointerDown }) {
         height={data.height}
         onPointerDown={onPointerDown}
       >
-        <div className="text-gray-900 select-none w-full h-full cursor-move px-3 py-2">
+        <div className={`text-gray-900 select-none w-full h-full ${readOnly ? 'cursor-default' : 'cursor-move'} px-3 py-2`}>
           <div className="flex justify-between gap-1 w-full">
             <label
               htmlFor={`note_${data.id}`}
@@ -148,7 +154,7 @@ export default function Note({ data, onPointerDown }) {
             >
               {data.title}
             </label>
-            {(hovered ||
+            {!readOnly && (hovered ||
               (selectedElement.element === ObjectType.NOTE &&
                 selectedElement.id === data.id &&
                 selectedElement.open &&
@@ -295,15 +301,24 @@ export default function Note({ data, onPointerDown }) {
             id={`note_${data.id}`}
             value={data.content}
             onChange={handleChange}
-            onFocus={(e) =>
+            onFocus={(e) => {
+              if (readOnly) {
+                e.target.blur();
+                return;
+              }
               setEditField({
                 content: e.target.value,
                 height: data.height,
-              })
-            }
+              });
+            }}
             onBlur={handleBlur}
-            className="w-full resize-none outline-hidden overflow-y-hidden border-none select-none"
-            style={{ backgroundColor: data.color }}
+            className={`w-full resize-none outline-hidden overflow-y-hidden border-none select-none`}
+            style={{ 
+              backgroundColor: data.color,
+              pointerEvents: readOnly ? 'none' : 'auto',
+              cursor: readOnly ? 'default' : 'text'
+            }}
+            readOnly={readOnly}
           />
         </div>
       </foreignObject>

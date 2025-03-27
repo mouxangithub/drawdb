@@ -44,6 +44,7 @@ export default function Searchbar() {
           .scrollIntoView({ behavior: "smooth" });
       }}
       className="w-full"
+      autoFocus={false}
     />
   );
 }

@@ -6,11 +6,26 @@ import { useTranslation } from "react-i18next";
 
 export const DiagramContext = createContext(null);
 
-export default function DiagramContextProvider({ children }) {
+/**
+ * 图表上下文提供程序
+ * 用于管理图表中的表格和关系
+ * 
+ * @param {Object} props - 组件属性
+ * @param {Array} [props.initialTables=[]] - 初始表格数据
+ * @param {Array} [props.initialRelationships=[]] - 初始关系数据
+ * @param {string} [props.initialDatabase=DB.GENERIC] - 初始数据库类型
+ * @param {ReactNode} props.children - 子组件
+ */
+export default function DiagramContextProvider({ 
+  children, 
+  initialTables = [], 
+  initialRelationships = [], 
+  initialDatabase = DB.GENERIC 
+}) {
   const { t } = useTranslation();
-  const [database, setDatabase] = useState(DB.GENERIC);
-  const [tables, setTables] = useState([]);
-  const [relationships, setRelationships] = useState([]);
+  const [database, setDatabase] = useState(initialDatabase);
+  const [tables, setTables] = useState(initialTables);
+  const [relationships, setRelationships] = useState(initialRelationships);
   const { transform } = useTransform();
   const { setUndoStack, setRedoStack } = useUndoRedo();
   const { selectedElement, setSelectedElement } = useSelect();

@@ -21,6 +21,7 @@ import {
   useAreas,
   useNotes,
   useLayout,
+  useReadOnly,
 } from "../../hooks";
 import { useTranslation } from "react-i18next";
 import { useEventListener } from "usehooks-ts";
@@ -28,6 +29,7 @@ import { areFieldsCompatible } from "../../utils/utils";
 
 export default function Canvas() {
   const { t } = useTranslation();
+  const { readOnly } = useReadOnly();
 
   const canvasRef = useRef(null);
   const canvasContextValue = useCanvas();
@@ -89,8 +91,9 @@ export default function Canvas() {
    */
   const handlePointerDownOnElement = (e, id, type) => {
     if (selectedElement.open && !layout.sidebar) return;
-
     if (!e.isPrimary) return;
+    
+    if (readOnly) return;
 
     if (type === ObjectType.TABLE) {
       const table = tables.find((t) => t.id === id);
@@ -142,10 +145,11 @@ export default function Canvas() {
    */
   const handlePointerMove = (e) => {
     if (selectedElement.open && !layout.sidebar) return;
-
     if (!e.isPrimary) return;
 
     if (linking) {
+      if (readOnly) return;
+      
       setLinkingLine({
         ...linkingLine,
         endX: pointer.spaces.diagram.x,
@@ -171,6 +175,8 @@ export default function Canvas() {
         },
       }));
     } else if (dragging.element === ObjectType.TABLE && dragging.id >= 0) {
+      if (readOnly) return;
+      
       updateTable(dragging.id, {
         x: pointer.spaces.diagram.x + grabOffset.x,
         y: pointer.spaces.diagram.y + grabOffset.y,
@@ -180,16 +186,22 @@ export default function Canvas() {
       dragging.id >= 0 &&
       areaResize.id === -1
     ) {
+      if (readOnly) return;
+      
       updateArea(dragging.id, {
         x: pointer.spaces.diagram.x + grabOffset.x,
         y: pointer.spaces.diagram.y + grabOffset.y,
       });
     } else if (dragging.element === ObjectType.NOTE && dragging.id >= 0) {
+      if (readOnly) return;
+      
       updateNote(dragging.id, {
         x: pointer.spaces.diagram.x + grabOffset.x,
         y: pointer.spaces.diagram.y + grabOffset.y,
       });
     } else if (areaResize.id !== -1) {
+      if (readOnly) return;
+      
       if (areaResize.dir === "none") return;
       let newDims = { ...initCoords };
       delete newDims.pointerX;
@@ -320,7 +332,7 @@ export default function Canvas() {
 
     if (!e.isPrimary) return;
 
-    if (coordsDidUpdate(dragging.element)) {
+    if (coordsDidUpdate(dragging.element) && !readOnly) {
       const info = getMovedElementDetails();
       setUndoStack((prev) => [
         ...prev,
@@ -341,32 +353,38 @@ export default function Canvas() {
       setRedoStack([]);
     }
     setDragging({ element: ObjectType.NONE, id: -1, prevX: 0, prevY: 0 });
-    if (panning.isPanning && didPan()) {
-      setUndoStack((prev) => [
-        ...prev,
-        {
-          action: Action.PAN,
-          undo: { x: panning.x, y: panning.y },
-          redo: transform.pan,
-          message: t("move_element", {
-            coords: `(${transform?.pan.x}, ${transform?.pan.y})`,
-            name: "diagram",
-          }),
-        },
-      ]);
-      setRedoStack([]);
-      setSelectedElement((prev) => ({
-        ...prev,
-        element: ObjectType.NONE,
-        id: -1,
-        open: false,
-      }));
+    
+    // 在只读模式下也保留平移功能，但不添加到撤销栈
+    if (panning.isPanning) {
+      if (didPan() && !readOnly) {
+        setUndoStack((prev) => [
+          ...prev,
+          {
+            action: Action.PAN,
+            undo: { x: panning.x, y: panning.y },
+            redo: transform.pan,
+            message: t("move_element", {
+              coords: `(${transform?.pan.x}, ${transform?.pan.y})`,
+              name: "diagram",
+            }),
+          },
+        ]);
+        setRedoStack([]);
+        setSelectedElement((prev) => ({
+          ...prev,
+          element: ObjectType.NONE,
+          id: -1,
+          open: false,
+        }));
+      }
+      setPanning((old) => ({ ...old, isPanning: false }));
     }
-    setPanning((old) => ({ ...old, isPanning: false }));
+    
     pointer.setStyle("default");
     if (linking) handleLinking();
     setLinking(false);
-    if (areaResize.id !== -1 && didResize(areaResize.id)) {
+    
+    if (areaResize.id !== -1 && didResize(areaResize.id) && !readOnly) {
       setUndoStack((prev) => [
         ...prev,
         {
@@ -389,6 +407,7 @@ export default function Canvas() {
       ]);
       setRedoStack([]);
     }
+    
     setAreaResize({ id: -1, dir: "none" });
     setInitCoords({
       x: 0,
@@ -401,6 +420,8 @@ export default function Canvas() {
   };
 
   const handleGripField = () => {
+    if (readOnly) return;
+    
     setPanning((old) => ({ ...old, isPanning: false }));
     setDragging({ element: ObjectType.NONE, id: -1, prevX: 0, prevY: 0 });
     setLinking(true);
@@ -548,8 +569,9 @@ export default function Canvas() {
               onPointerDown={(e) =>
                 handlePointerDownOnElement(e, a.id, ObjectType.AREA)
               }
-              setResize={setAreaResize}
-              setInitCoords={setInitCoords}
+              setResize={readOnly ? null : setAreaResize}
+              setInitCoords={readOnly ? null : setInitCoords}
+              readOnly={readOnly}
             />
           ))}
           {relationships.map((e, i) => (
@@ -559,15 +581,16 @@ export default function Canvas() {
             <Table
               key={table.id}
               tableData={table}
-              setHoveredTable={setHoveredTable}
-              handleGripField={handleGripField}
-              setLinkingLine={setLinkingLine}
+              setHoveredTable={readOnly ? null : setHoveredTable}
+              handleGripField={readOnly ? null : handleGripField}
+              setLinkingLine={readOnly ? null : setLinkingLine}
               onPointerDown={(e) =>
                 handlePointerDownOnElement(e, table.id, ObjectType.TABLE)
               }
+              readOnly={readOnly}
             />
           ))}
-          {linking && (
+          {linking && !readOnly && (
             <path
               d={`M ${linkingLine.startX} ${linkingLine.startY} L ${linkingLine.endX} ${linkingLine.endY}`}
               stroke="red"
@@ -582,6 +605,7 @@ export default function Canvas() {
               onPointerDown={(e) =>
                 handlePointerDownOnElement(e, n.id, ObjectType.NOTE)
               }
+              readOnly={readOnly}
             />
           ))}
         </svg>

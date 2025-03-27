@@ -6,9 +6,9 @@ import { useTranslation } from "react-i18next";
 
 export const NotesContext = createContext(null);
 
-export default function NotesContextProvider({ children }) {
+export default function NotesContextProvider({ children, initialNotes = [] }) {
   const { t } = useTranslation();
-  const [notes, setNotes] = useState([]);
+  const [notes, setNotes] = useState(initialNotes);
   const { transform } = useTransform();
   const { setUndoStack, setRedoStack } = useUndoRedo();
   const { selectedElement, setSelectedElement } = useSelect();

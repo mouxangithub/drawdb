@@ -76,6 +76,23 @@
   cursor: inherit;
 }
 
+/* 修复 autofocus 属性问题 */
+input[autofocus] {
+  outline: none; /* 覆盖默认的聚焦效果 */
+}
+
+/* 修复 autofocus 属性问题 - 加强版 */
+input[autofocus],
+[autofocus],
+*[autofocus] {
+  outline: none !important; 
+}
+
+/* 为自定义树选择器添加样式 */
+.custom-tree-select-dropdown input[autofocus] {
+  outline: none !important;
+}
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -171,6 +188,76 @@
   animation-delay: 6s;
   -ms-animation-delay: 6s;
   -webkit-animation-delay: 6s;
+}
+
+@keyframes top-to-bottom {
+  0% {
+    opacity: 0;
+  }
+  5% {
+    opacity: 0;
+    transform: translateY(-18px);
+  }
+  10% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  25% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+  30% {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  80% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 表格深色模式适配 */
+[theme-mode="dark"] .semi-table-wrapper,
+[theme-mode="dark"] .semi-table,
+[theme-mode="dark"] .semi-table-row,
+[theme-mode="dark"] .semi-table-row-head,
+[theme-mode="dark"] .semi-table-tbody,
+[theme-mode="dark"] .semi-table-header-row {
+  background-color: var(--semi-color-bg-1) !important;
+  color: var(--semi-color-text-0) !important;
+}
+
+[theme-mode="dark"] .semi-table-row:hover {
+  background-color: var(--semi-color-bg-2) !important;
+}
+
+[theme-mode="dark"] .semi-table-cell {
+  border-bottom: 1px solid var(--semi-color-border) !important;
+}
+
+[theme-mode="dark"] .semi-card {
+  background-color: var(--semi-color-bg-1) !important;
+}
+
+[theme-mode="dark"] .semi-modal-content {
+  background-color: var(--semi-color-bg-1) !important;
+  color: var(--semi-color-text-0) !important;
+}
+
+[theme-mode="dark"] .semi-modal-header {
+  background-color: var(--semi-color-bg-1) !important;
+  color: var(--semi-color-text-0) !important;
+}
+
+[theme-mode="dark"] .semi-modal-body {
+  background-color: var(--semi-color-bg-1) !important;
+  color: var(--semi-color-text-0) !important;
+}
+
+[theme-mode="dark"] .semi-empty-image {
+  filter: invert(0.8);
 }
 
 @keyframes top-to-bottom {

@@ -1,3 +1,4 @@
+import { useParams } from "react-router-dom";
 import LayoutContextProvider from "../context/LayoutContext";
 import TransformContextProvider from "../context/TransformContext";
 import TablesContextProvider from "../context/DiagramContext";
@@ -12,6 +13,8 @@ import EnumsContextProvider from "../context/EnumsContext";
 import WorkSpace from "../components/Workspace";
 
 export default function Editor() {
+  const { id } = useParams(); // 获取URL参数中的图表ID
+  
   return (
     <LayoutContextProvider>
       <TransformContextProvider>
@@ -24,7 +27,7 @@ export default function Editor() {
                     <EnumsContextProvider>
                       <TablesContextProvider>
                         <SaveStateContextProvider>
-                          <WorkSpace />
+                          <WorkSpace diagramId={id} />
                         </SaveStateContextProvider>
                       </TablesContextProvider>
                     </EnumsContextProvider>

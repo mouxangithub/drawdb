@@ -30,6 +30,7 @@ export default function Table(props) {
     setHoveredTable,
     handleGripField,
     setLinkingLine,
+    readOnly = false,
   } = props;
   const { layout } = useLayout();
   const { deleteTable, deleteField } = useDiagram();
@@ -46,6 +47,8 @@ export default function Table(props) {
     tableData.fields.length * tableFieldHeight + tableHeaderHeight + 7;
 
   const openEditor = () => {
+    if (readOnly) return; // 只读模式下不能打开编辑器
+    
     if (!layout.sidebar) {
       setSelectedElement((prev) => ({
         ...prev,
@@ -76,12 +79,12 @@ export default function Table(props) {
         y={tableData.y}
         width={settings.tableWidth}
         height={height}
-        className="group drop-shadow-lg rounded-md cursor-move"
+        className={`group drop-shadow-lg rounded-md ${readOnly ? 'cursor-default' : 'cursor-move'}`}
         onPointerDown={onPointerDown}
       >
         <div
-          onDoubleClick={openEditor}
-          className={`border-2 hover:border-dashed hover:border-blue-500
+          onDoubleClick={readOnly ? null : openEditor}
+          className={`border-2 ${!readOnly ? 'hover:border-dashed hover:border-blue-500' : ''}
                select-none rounded-lg w-full ${
                  settings.mode === "light"
                    ? "bg-zinc-100 text-zinc-800"
@@ -106,92 +109,162 @@ export default function Table(props) {
             <div className=" px-3 overflow-hidden text-ellipsis whitespace-nowrap">
               {tableData.name}
             </div>
-            <div className="hidden group-hover:block">
-              <div className="flex justify-end items-center mx-2">
-                <Button
-                  icon={<IconEdit />}
-                  size="small"
-                  theme="solid"
-                  style={{
-                    backgroundColor: "#2f68adb3",
-                    marginRight: "6px",
-                  }}
-                  onClick={openEditor}
-                />
-                <Popover
-                  key={tableData.key}
-                  content={
-                    <div className="popover-theme">
-                      <div className="mb-2">
-                        <strong>{t("comment")}:</strong>{" "}
-                        {tableData.comment === "" ? (
-                          t("not_set")
-                        ) : (
-                          <div>{tableData.comment}</div>
-                        )}
-                      </div>
-                      <div>
-                        <strong
-                          className={`${
-                            tableData.indices.length === 0 ? "" : "block"
-                          }`}
-                        >
-                          {t("indices")}:
-                        </strong>{" "}
-                        {tableData.indices.length === 0 ? (
-                          t("not_set")
-                        ) : (
-                          <div>
-                            {tableData.indices.map((index, k) => (
-                              <div
-                                key={k}
-                                className={`flex items-center my-1 px-2 py-1 rounded ${
-                                  settings.mode === "light"
-                                    ? "bg-gray-100"
-                                    : "bg-zinc-800"
-                                }`}
-                              >
-                                <i className="fa-solid fa-thumbtack me-2 mt-1 text-slate-500"></i>
-                                <div>
-                                  {index.fields.map((f) => (
-                                    <Tag color="blue" key={f} className="me-1">
-                                      {f}
-                                    </Tag>
-                                  ))}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <Button
-                        icon={<IconDeleteStroked />}
-                        type="danger"
-                        block
-                        style={{ marginTop: "8px" }}
-                        onClick={() => deleteTable(tableData.id)}
-                      >
-                        {t("delete")}
-                      </Button>
-                    </div>
-                  }
-                  position="rightTop"
-                  showArrow
-                  trigger="click"
-                  style={{ width: "200px", wordBreak: "break-word" }}
-                >
+            {!readOnly ? (
+              <div className="hidden group-hover:block">
+                <div className="flex justify-end items-center mx-2">
                   <Button
-                    icon={<IconMore />}
-                    type="tertiary"
+                    icon={<IconEdit />}
                     size="small"
+                    theme="solid"
                     style={{
-                      backgroundColor: "#808080b3",
-                      color: "white",
+                      backgroundColor: "#2f68adb3",
+                      marginRight: "6px",
                     }}
+                    onClick={openEditor}
                   />
-                </Popover>
+                  <Popover
+                    key={tableData.key}
+                    content={
+                      <div className="popover-theme">
+                        <div className="mb-2">
+                          <strong>{t("comment")}:</strong>{" "}
+                          {tableData.comment === "" ? (
+                            t("not_set")
+                          ) : (
+                            <div>{tableData.comment}</div>
+                          )}
+                        </div>
+                        <div>
+                          <strong
+                            className={`${
+                              tableData.indices.length === 0 ? "" : "block"
+                            }`}
+                          >
+                            {t("indices")}:
+                          </strong>{" "}
+                          {tableData.indices.length === 0 ? (
+                            t("not_set")
+                          ) : (
+                            <div>
+                              {tableData.indices.map((index, k) => (
+                                <div
+                                  key={k}
+                                  className={`flex items-center my-1 px-2 py-1 rounded ${
+                                    settings.mode === "light"
+                                      ? "bg-gray-100"
+                                      : "bg-zinc-800"
+                                  }`}
+                                >
+                                  <i className="fa-solid fa-thumbtack me-2 mt-1 text-slate-500"></i>
+                                  <div>
+                                    {index.fields.map((f) => (
+                                      <Tag color="blue" key={f} className="me-1">
+                                        {f}
+                                      </Tag>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          icon={<IconDeleteStroked />}
+                          type="danger"
+                          block
+                          style={{ marginTop: "8px" }}
+                          onClick={() => deleteTable(tableData.id)}
+                        >
+                          {t("delete")}
+                        </Button>
+                      </div>
+                    }
+                    position="rightTop"
+                    showArrow
+                    trigger="click"
+                    style={{ width: "200px", wordBreak: "break-word" }}
+                  >
+                    <Button
+                      icon={<IconMore />}
+                      type="tertiary"
+                      size="small"
+                      style={{
+                        backgroundColor: "#808080b3",
+                        color: "white",
+                      }}
+                    />
+                  </Popover>
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="hidden group-hover:block">
+                <div className="flex justify-end items-center mx-2">
+                  <Popover
+                    key={tableData.key}
+                    content={
+                      <div className="popover-theme">
+                        <div className="mb-2">
+                          <strong>{t("comment")}:</strong>{" "}
+                          {tableData.comment === "" ? (
+                            t("not_set")
+                          ) : (
+                            <div>{tableData.comment}</div>
+                          )}
+                        </div>
+                        <div>
+                          <strong
+                            className={`${
+                              tableData.indices.length === 0 ? "" : "block"
+                            }`}
+                          >
+                            {t("indices")}:
+                          </strong>{" "}
+                          {tableData.indices.length === 0 ? (
+                            t("not_set")
+                          ) : (
+                            <div>
+                              {tableData.indices.map((index, k) => (
+                                <div
+                                  key={k}
+                                  className={`flex items-center my-1 px-2 py-1 rounded ${
+                                    settings.mode === "light"
+                                      ? "bg-gray-100"
+                                      : "bg-zinc-800"
+                                  }`}
+                                >
+                                  <i className="fa-solid fa-thumbtack me-2 mt-1 text-slate-500"></i>
+                                  <div>
+                                    {index.fields.map((f) => (
+                                      <Tag color="blue" key={f} className="me-1">
+                                        {f}
+                                      </Tag>
+                                    ))}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    }
+                    position="rightTop"
+                    showArrow
+                    trigger="click"
+                    style={{ width: "200px", wordBreak: "break-word" }}
+                  >
+                    <Button
+                      icon={<IconMore />}
+                      type="tertiary"
+                      size="small"
+                      style={{
+                        backgroundColor: "#808080b3",
+                        color: "white",
+                      }}
+                    />
+                  </Popover>
+                </div>
+              </div>
+            )}
           </div>
           {tableData.fields.map((e, i) => {
             return settings.showFieldSummary ? (
@@ -261,27 +334,29 @@ export default function Table(props) {
           })}
         </div>
       </foreignObject>
-      <SideSheet
-        title={t("edit")}
-        size="small"
-        visible={
-          selectedElement.element === ObjectType.TABLE &&
-          selectedElement.id === tableData.id &&
-          selectedElement.open &&
-          !layout.sidebar
-        }
-        onCancel={() =>
-          setSelectedElement((prev) => ({
-            ...prev,
-            open: !prev.open,
-          }))
-        }
-        style={{ paddingBottom: "16px" }}
-      >
-        <div className="sidesheet-theme">
-          <TableInfo data={tableData} />
-        </div>
-      </SideSheet>
+      {!readOnly && (
+        <SideSheet
+          title={t("edit")}
+          size="small"
+          visible={
+            selectedElement.element === ObjectType.TABLE &&
+            selectedElement.id === tableData.id &&
+            selectedElement.open &&
+            !layout.sidebar
+          }
+          onCancel={() =>
+            setSelectedElement((prev) => ({
+              ...prev,
+              open: !prev.open,
+            }))
+          }
+          style={{ paddingBottom: "16px" }}
+        >
+          <div className="sidesheet-theme">
+            <TableInfo data={tableData} />
+          </div>
+        </SideSheet>
+      )}
     </>
   );
 
@@ -295,6 +370,11 @@ export default function Table(props) {
         } group h-[36px] px-2 py-1 flex justify-between items-center gap-1 w-full overflow-hidden`}
         onPointerEnter={(e) => {
           if (!e.isPrimary) return;
+          
+          if (readOnly) {
+            setHoveredField(index);
+            return;
+          }
 
           setHoveredField(index);
           setHoveredTable({
@@ -304,12 +384,9 @@ export default function Table(props) {
         }}
         onPointerLeave={(e) => {
           if (!e.isPrimary) return;
-
           setHoveredField(-1);
         }}
         onPointerDown={(e) => {
-          // Required for onPointerLeave to trigger when a touch pointer leaves
-          // https://stackoverflow.com/a/70976017/1137077
           e.target.releasePointerCapture(e.pointerId);
         }}
       >
@@ -318,39 +395,42 @@ export default function Table(props) {
             hoveredField === index ? "text-zinc-400" : ""
           } flex items-center gap-2 overflow-hidden`}
         >
-          <button
-            className="shrink-0 w-[10px] h-[10px] bg-[#2f68adcc] rounded-full"
-            onPointerDown={(e) => {
-              if (!e.isPrimary) return;
+          {!readOnly && (
+            <button
+              className="shrink-0 w-[10px] h-[10px] bg-[#2f68adcc] rounded-full"
+              onPointerDown={(e) => {
+                if (!e.isPrimary) return;
+                if (readOnly) return;
 
-              handleGripField(index);
-              setLinkingLine((prev) => ({
-                ...prev,
-                startFieldId: index,
-                startTableId: tableData.id,
-                startX: tableData.x + 15,
-                startY:
-                  tableData.y +
-                  index * tableFieldHeight +
-                  tableHeaderHeight +
-                  tableColorStripHeight +
-                  12,
-                endX: tableData.x + 15,
-                endY:
-                  tableData.y +
-                  index * tableFieldHeight +
-                  tableHeaderHeight +
-                  tableColorStripHeight +
-                  12,
-              }));
-            }}
-          />
+                handleGripField(index);
+                setLinkingLine((prev) => ({
+                  ...prev,
+                  startFieldId: index,
+                  startTableId: tableData.id,
+                  startX: tableData.x + 15,
+                  startY:
+                    tableData.y +
+                    index * tableFieldHeight +
+                    tableHeaderHeight +
+                    tableColorStripHeight +
+                    12,
+                  endX: tableData.x + 15,
+                  endY:
+                    tableData.y +
+                    index * tableFieldHeight +
+                    tableHeaderHeight +
+                    tableColorStripHeight +
+                    12,
+                }));
+              }}
+            />
+          )}
           <span className="overflow-hidden text-ellipsis whitespace-nowrap">
             {fieldData.name}
           </span>
         </div>
         <div className="text-zinc-400">
-          {hoveredField === index ? (
+          {hoveredField === index && !readOnly ? (
             <Button
               theme="solid"
               size="small"

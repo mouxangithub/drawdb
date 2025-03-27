@@ -4,9 +4,11 @@ import logo from "../assets/logo_light_160.png";
 import { SideSheet } from "@douyinfe/semi-ui";
 import { IconMenu } from "@douyinfe/semi-icons";
 import { socials } from "../data/socials";
+import { useTranslation } from "react-i18next";
 
 export default function Navbar() {
   const [openMenu, setOpenMenu] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <>
@@ -17,6 +19,12 @@ export default function Navbar() {
           </Link>
           <div className="md:hidden flex gap-12">
             <Link
+              to="/"
+              className="text-lg font-semibold hover:text-sky-800 transition-colors duration-300"
+            >
+              {t("diagram_list")}
+            </Link>
+            <Link
               className="text-lg font-semibold hover:text-sky-800 transition-colors duration-300"
               onClick={() =>
                 document
@@ -25,18 +33,6 @@ export default function Navbar() {
               }
             >
               Features
-            </Link>
-            <Link
-              to="/editor"
-              className="text-lg font-semibold hover:text-sky-800 transition-colors duration-300"
-            >
-              Editor
-            </Link>
-            <Link
-              to="/templates"
-              className="text-lg font-semibold hover:text-sky-800 transition-colors duration-300"
-            >
-              Templates
             </Link>
             <Link
               to={socials.docs}
@@ -92,6 +88,14 @@ export default function Navbar() {
         width={window.innerWidth}
       >
         <Link
+          to="/"
+          className="hover:bg-zinc-100 block p-3 text-base font-semibold"
+          onClick={() => setOpenMenu(false)}
+        >
+          {t("diagram_list")}
+        </Link>
+        <hr />
+        <Link
           className="hover:bg-zinc-100 block p-3 text-base font-semibold"
           onClick={() => {
             document
@@ -101,20 +105,6 @@ export default function Navbar() {
           }}
         >
           Features
-        </Link>
-        <hr />
-        <Link
-          to="/editor"
-          className="hover:bg-zinc-100 block p-3 text-base font-semibold"
-        >
-          Editor
-        </Link>
-        <hr />
-        <Link
-          to="/templates"
-          className="hover:bg-zinc-100 block p-3 text-base font-semibold"
-        >
-          Templates
         </Link>
         <hr />
         <Link

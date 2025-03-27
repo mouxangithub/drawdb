@@ -26,6 +26,7 @@ export default function Area({
   onPointerDown,
   setResize,
   setInitCoords,
+  readOnly = false,
 }) {
   const ref = useRef(null);
   const isHovered = useHover(ref);
@@ -40,6 +41,8 @@ export default function Area({
   const { selectedElement, setSelectedElement } = useSelect();
 
   const handleResize = (e, dir) => {
+    if (readOnly) return; // 只读模式下不允许调整大小
+    
     setResize({ id: data.id, dir: dir });
     setInitCoords({
       x: data.x,
@@ -52,6 +55,8 @@ export default function Area({
   };
 
   const edit = () => {
+    if (readOnly) return; // 只读模式下不允许编辑
+    
     if (layout.sidebar) {
       setSelectedElement((prev) => ({
         ...prev,
@@ -75,6 +80,8 @@ export default function Area({
   };
 
   const onClickOutSide = () => {
+    if (readOnly) return; // 只读模式下不处理点击外部
+    
     if (selectedElement.editFromToolbar) {
       setSelectedElement((prev) => ({
         ...prev,
@@ -105,7 +112,7 @@ export default function Area({
         onPointerDown={onPointerDown}
       >
         <div
-          className={`w-full h-full p-2 rounded cursor-move border-2 ${
+          className={`w-full h-full p-2 rounded ${readOnly ? 'cursor-default' : 'cursor-move'} border-2 ${
             isHovered
               ? "border-dashed border-blue-500"
               : selectedElement.element === ObjectType.AREA &&
@@ -119,7 +126,7 @@ export default function Area({
             <div className="text-color select-none overflow-hidden text-ellipsis">
               {data.name}
             </div>
-            {(isHovered || (areaIsSelected() && !layout.sidebar)) && (
+            {!readOnly && (isHovered || (areaIsSelected() && !layout.sidebar)) && (
               <Popover
                 visible={areaIsSelected() && !layout.sidebar}
                 onClickOutSide={onClickOutSide}
@@ -150,40 +157,40 @@ export default function Area({
             cy={data.y}
             r={6}
             fill={settings.mode === "light" ? "white" : "rgb(28, 31, 35)"}
-            stroke="#5891db"
+            stroke={readOnly ? "#cecece" : "#5891db"}
             strokeWidth={2}
-            cursor="nwse-resize"
-            onPointerDown={(e) => e.isPrimary && handleResize(e, "tl")}
+            cursor={readOnly ? "default" : "nwse-resize"}
+            onPointerDown={(e) => !readOnly && e.isPrimary && handleResize(e, "tl")}
           />
           <circle
             cx={data.x + data.width}
             cy={data.y}
             r={6}
             fill={settings.mode === "light" ? "white" : "rgb(28, 31, 35)"}
-            stroke="#5891db"
+            stroke={readOnly ? "#cecece" : "#5891db"}
             strokeWidth={2}
-            cursor="nesw-resize"
-            onPointerDown={(e) => e.isPrimary && handleResize(e, "tr")}
+            cursor={readOnly ? "default" : "nesw-resize"}
+            onPointerDown={(e) => !readOnly && e.isPrimary && handleResize(e, "tr")}
           />
           <circle
             cx={data.x}
             cy={data.y + data.height}
             r={6}
             fill={settings.mode === "light" ? "white" : "rgb(28, 31, 35)"}
-            stroke="#5891db"
+            stroke={readOnly ? "#cecece" : "#5891db"}
             strokeWidth={2}
-            cursor="nesw-resize"
-            onPointerDown={(e) => e.isPrimary && handleResize(e, "bl")}
+            cursor={readOnly ? "default" : "nesw-resize"}
+            onPointerDown={(e) => !readOnly && e.isPrimary && handleResize(e, "bl")}
           />
           <circle
             cx={data.x + data.width}
             cy={data.y + data.height}
             r={6}
             fill={settings.mode === "light" ? "white" : "rgb(28, 31, 35)"}
-            stroke="#5891db"
+            stroke={readOnly ? "#cecece" : "#5891db"}
             strokeWidth={2}
-            cursor="nwse-resize"
-            onPointerDown={(e) => e.isPrimary && handleResize(e, "br")}
+            cursor={readOnly ? "default" : "nwse-resize"}
+            onPointerDown={(e) => !readOnly && e.isPrimary && handleResize(e, "br")}
           />
         </>
       )}

@@ -9,9 +9,9 @@ logs
 # Ignore environment variables
 .env
 
-# Ignore build directories and files
-dist
-build
+# 不排除dist目录，因为Docker构建需要复制所有源代码
+# 虽然dist目录可能不存在（被.gitignore排除），但构建过程会重新生成它
+# dist
 
 # Ignore temporary files and directories
 tmp

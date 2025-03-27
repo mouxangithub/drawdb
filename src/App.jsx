@@ -1,13 +1,11 @@
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useLayoutEffect } from "react";
 import Editor from "./pages/Editor";
-import Survey from "./pages/Survey";
-import BugReport from "./pages/BugReport";
-import Templates from "./pages/Templates";
-import LandingPage from "./pages/LandingPage";
+import DiagramList from "./pages/DiagramList";
 import SettingsContextProvider from "./context/SettingsContext";
 import { useSettings } from "./hooks";
 import NotFound from "./pages/NotFound";
+import { useFixAutofocusIssue } from "./utils/fixAutofocusIssue";
 
 export default function App() {
   return (
@@ -15,7 +13,14 @@ export default function App() {
       <BrowserRouter>
         <RestoreScroll />
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route
+            path="/"
+            element={
+              <ThemedPage>
+                <DiagramList />
+              </ThemedPage>
+            }
+          />
           <Route
             path="/editor"
             element={
@@ -25,22 +30,13 @@ export default function App() {
             }
           />
           <Route
-            path="/survey"
+            path="/editor/:id"
             element={
               <ThemedPage>
-                <Survey />
+                <Editor />
               </ThemedPage>
             }
           />
-          <Route
-            path="/bug-report"
-            element={
-              <ThemedPage>
-                <BugReport />
-              </ThemedPage>
-            }
-          />
-          <Route path="/templates" element={<Templates />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
@@ -50,6 +46,7 @@ export default function App() {
 
 function ThemedPage({ children }) {
   const { setSettings } = useSettings();
+  useFixAutofocusIssue();
 
   useLayoutEffect(() => {
     const theme = localStorage.getItem("theme");

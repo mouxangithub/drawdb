@@ -49,6 +49,7 @@ export default function Modal({
   setExportData,
   importDb,
   importFrom,
+  diagramId,
 }) {
   const { t, i18n } = useTranslation();
   const { setTables, setRelationships, database, setDatabase } = useDiagram();
@@ -319,64 +320,66 @@ export default function Modal({
         return <SetTableWidth />;
       case MODAL.LANGUAGE:
         return <Language />;
-      case MODAL.SHARE:
-        return <Share title={title} setModal={setModal} />;
       default:
         return <></>;
     }
   };
 
   return (
-    <SemiUIModal
-      style={isRtl(i18n.language) ? { direction: "rtl" } : {}}
-      title={getModalTitle(modal)}
-      visible={modal !== MODAL.NONE}
-      onOk={getModalOnOk}
-      afterClose={() => {
-        setExportData(() => ({
-          data: "",
-          extension: "",
-          filename: `${title}_${new Date().toISOString()}`,
-        }));
-        setError({
-          type: STATUS.NONE,
-          message: "",
-        });
-        setImportData(null);
-        setImportSource({
-          src: "",
-          overwrite: true,
-        });
-      }}
-      onCancel={() => {
-        if (modal === MODAL.RENAME) setUncontrolledTitle(title);
-        setModal(MODAL.NONE);
-      }}
-      centered
-      closeOnEsc={true}
-      okText={getOkText(modal)}
-      okButtonProps={{
-        disabled:
-          (error && error?.type === STATUS.ERROR) ||
-          (modal === MODAL.IMPORT &&
-            (error.type === STATUS.ERROR || !importData)) ||
-          (modal === MODAL.RENAME && title === "") ||
-          ((modal === MODAL.IMG || modal === MODAL.CODE) && !exportData.data) ||
-          (modal === MODAL.SAVEAS && saveAsTitle === "") ||
-          (modal === MODAL.IMPORT_SRC && importSource.src === ""),
-        hidden: modal === MODAL.SHARE,
-      }}
-      hasCancel={modal !== MODAL.SHARE}
-      cancelText={t("cancel")}
-      width={getModalWidth(modal)}
-      bodyStyle={{
-        maxHeight: window.innerHeight - 280,
-        overflow:
-          modal === MODAL.CODE || modal === MODAL.IMG ? "hidden" : "auto",
-        direction: "ltr",
-      }}
-    >
-      {getModalBody()}
-    </SemiUIModal>
+    <>
+      {modal === MODAL.SHARE ? (
+        <Share title={title} setModal={setModal} diagramId={diagramId} />
+      ) : (
+        <SemiUIModal
+          style={isRtl(i18n.language) ? { direction: "rtl" } : {}}
+          title={getModalTitle(modal)}
+          visible={modal !== MODAL.NONE}
+          onOk={getModalOnOk}
+          afterClose={() => {
+            setExportData(() => ({
+              data: "",
+              extension: "",
+              filename: `${title}_${new Date().toISOString()}`,
+            }));
+            setError({
+              type: STATUS.NONE,
+              message: "",
+            });
+            setImportData(null);
+            setImportSource({
+              src: "",
+              overwrite: true,
+            });
+          }}
+          onCancel={() => {
+            if (modal === MODAL.RENAME) setUncontrolledTitle(title);
+            setModal(MODAL.NONE);
+          }}
+          centered
+          closeOnEsc={true}
+          okText={getOkText(modal)}
+          okButtonProps={{
+            disabled:
+              (error && error?.type === STATUS.ERROR) ||
+              (modal === MODAL.IMPORT &&
+                (error.type === STATUS.ERROR || !importData)) ||
+              (modal === MODAL.RENAME && title === "") ||
+              ((modal === MODAL.IMG || modal === MODAL.CODE) && !exportData.data) ||
+              (modal === MODAL.SAVEAS && saveAsTitle === "") ||
+              (modal === MODAL.IMPORT_SRC && importSource.src === ""),
+          }}
+          cancelText={t("cancel")}
+          width={getModalWidth(modal)}
+          bodyStyle={{
+            maxHeight: window.innerHeight - 280,
+            overflow:
+              modal === MODAL.CODE || modal === MODAL.IMG ? "hidden" : "auto",
+            direction: "ltr",
+          }}
+        >
+          {getModalBody()}
+        </SemiUIModal>
+      )}
+    </>
   );
 }

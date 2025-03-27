@@ -1,15 +1,67 @@
 services:
-  drawdb:
+  # 开发环境配置 - 使用本地文件
+  drawdb-dev:
     image: node:20-alpine
-    container_name: drawdb
+    container_name: drawdb-dev
     ports:
       - 5173:5173
+      - 3002:3002
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-    command: sh -c "npm install && npm run dev -- --host"
+    command: sh -c "npm run install:all && npm start"
     networks:
       - default
+    environment:
+      - PORT=3002
+      - NODE_ENV=development
+      - DB_STORAGE=server/database/drawdb.sqlite
+      - VITE_BACKEND_URL=http://localhost:3002
+      - API_URL=http://localhost:3002/api
+
+  # 生产环境配置 - 使用构建好的镜像
+  drawdb-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: drawdb-prod
+    restart: unless-stopped
+    ports:
+      - 3000:3000
+    volumes:
+      - ./server/database:/app/server/database
+    networks:
+      - default
+    environment:
+      - PORT=3000
+      - NODE_ENV=production
+      - DB_STORAGE=server/database/drawdb.sqlite
+      - API_URL=/api
+      
+  # 数据库备份服务 - 每天凌晨2点运行
+  db-backup:
+    image: alpine
+    container_name: drawdb-backup
+    volumes:
+      - ./server/database:/data/db
+      - ./backups:/data/backups
+    command: >
+      sh -c "echo '0 2 * * * mkdir -p /data/backups && cp /data/db/drawdb.sqlite /data/backups/drawdb_$(date +\%Y\%m\%d_\%H\%M\%S).sqlite && find /data/backups -name \"drawdb_*.sqlite\" -type f -mtime +7 -delete' > /etc/crontabs/root && crond -f"
+    depends_on:
+      - drawdb-prod
+    restart: unless-stopped
+
+  # 一次性备份服务 - 可手动启动执行备份
+  db-backup-manual:
+    image: alpine
+    container_name: drawdb-backup-manual
+    volumes:
+      - ./server/database:/data/db
+      - ./backups:/data/backups
+    command: >
+      sh -c "mkdir -p /data/backups && cp /data/db/drawdb.sqlite /data/backups/drawdb_$(date +%Y%m%d_%H%M%S).sqlite && echo 'Database backup completed'"
+    profiles:
+      - backup
 
 networks:
   default:

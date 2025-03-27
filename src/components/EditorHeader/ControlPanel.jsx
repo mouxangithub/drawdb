@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 import {
   IconCaretdown,
   IconChevronRight,
@@ -1366,12 +1366,6 @@ export default function ControlPanel({
       ask_on_discord: {
         function: () => window.open(socials.discord, "_blank"),
       },
-      report_bug: {
-        function: () => window.open("/bug-report", "_blank"),
-      },
-      feedback: {
-        function: () => window.open("/survey", "_blank"),
-      },
     },
   };
 
@@ -1415,15 +1409,26 @@ export default function ControlPanel({
           >
             {header()}
             {window.name.split(" ")[0] !== "t" && (
-              <Button
-                type="primary"
-                className="!text-base me-2 !pe-6 !ps-5 !py-[18px] !rounded-md"
-                size="default"
-                icon={<IconShareStroked />}
-                onClick={() => setModal(MODAL.SHARE)}
-              >
-                {t("share")}
-              </Button>
+              <div className="flex items-center">
+                <Button 
+                  type="primary"
+                  className="text-base mx-1 py-2"
+                  size="large"
+                  icon={<i className="fa-solid fa-table-list mr-1.5"></i>}
+                  onClick={() => navigate("/")}
+                >
+                  {t("diagram_list")}
+                </Button>
+                <Button
+                  type="primary"
+                  className="text-base mx-1 py-2"
+                  size="large"
+                  icon={<IconShareStroked />}
+                  onClick={() => setModal(MODAL.SHARE)}
+                >
+                  {t("share")}
+                </Button>
+              </div>
             )}
           </div>
         )}
@@ -1439,6 +1444,7 @@ export default function ControlPanel({
         setModal={setModal}
         importFrom={importFrom}
         importDb={importDb}
+        diagramId={diagramId}
       />
       <Sidesheet
         type={sidesheet}
@@ -1682,7 +1688,7 @@ export default function ControlPanel({
                 }}
                 onClick={() => setModal(MODAL.RENAME)}
               >
-                {window.name.split(" ")[0] === "t" ? "Templates/" : "Diagrams/"}
+                {window.name.split(" ")[0] === "t" ? "Templates/" : ""}
                 {title}
               </div>
               {(showEditName || modal === MODAL.RENAME) && <IconEdit />}

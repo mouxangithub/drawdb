@@ -6,9 +6,9 @@ import { useTranslation } from "react-i18next";
 
 export const AreasContext = createContext(null);
 
-export default function AreasContextProvider({ children }) {
+export default function AreasContextProvider({ children, initialAreas = [] }) {
   const { t } = useTranslation();
-  const [areas, setAreas] = useState([]);
+  const [areas, setAreas] = useState(initialAreas);
   const { transform } = useTransform();
   const { selectedElement, setSelectedElement } = useSelect();
   const { setUndoStack, setRedoStack } = useUndoRedo();
