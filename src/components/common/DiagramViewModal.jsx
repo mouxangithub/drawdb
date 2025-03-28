@@ -235,12 +235,12 @@ const InfoPanel = ({ diagram }) => {
   return (
     <div className="info-panel" style={{
       position: 'absolute',
-      right: '16px',
-      bottom: '16px',
+      right: 'calc(50% - 120px)',
+      top: '10px',
       zIndex: 999,
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'flex-end'
+      alignItems: 'center'
     }}>
       <Typography.Title heading={5} className="text-color m-0">
         {diagram.name || t('untitled_diagram')}
@@ -251,6 +251,11 @@ const InfoPanel = ({ diagram }) => {
       {(diagram.updatedAt || diagram.lastModified) && (
         <Typography.Text type="tertiary" className="text-color">
           {t('last_modified')}: {formatDateTime(diagram.updatedAt || diagram.lastModified)}
+        </Typography.Text>
+      )}
+      {(diagram.createdAt) && (
+        <Typography.Text type="tertiary" className="text-color">
+          {t('create_time')}: {formatDateTime(diagram.createdAt)}
         </Typography.Text>
       )}
     </div>
@@ -505,9 +510,11 @@ const DiagramViewModal = ({ visible, diagram, onClose, onEdit, onShare }) => {
       height="85%"
       centered
       bodyStyle={{
-        height: 'calc(85vh - 60px)',
+        height: 'calc(85vh - 20px)',
         overflow: 'hidden',
-        margin: '-24px -20px',
+        margin: '-15px',
+        padding: 0,
+        borderRadius: 'var(--semi-border-radius-large)',
         position: 'relative'
       }}
     >

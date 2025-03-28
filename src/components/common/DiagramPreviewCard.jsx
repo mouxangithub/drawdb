@@ -3,7 +3,6 @@ import { Button, Card, Space, Typography, Popconfirm, Tooltip, Modal } from '@do
 import { IconEdit, IconDelete, IconShareStroked, IconEyeOpened } from '@douyinfe/semi-icons';
 import { useTranslation } from 'react-i18next';
 import { databases } from '../../data/databases';
-import { darkBgTheme } from '../../data/constants';
 import Canvas from '../EditorCanvas/Canvas';
 import { CanvasContextProvider } from '../../context/CanvasContext';
 import TransformContextProvider from '../../context/TransformContext';
@@ -234,52 +233,29 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
     return t('generic');
   }, [diagram, t]);
 
-  // 格式化更新时间
-  const formattedUpdateTime = useMemo(() => {
-    if (!diagram?.updatedAt) return t('no_update_time');
-    
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return '';
+  
     try {
-      const date = new Date(diagram.updatedAt);
-      
-      // 格式化为 YYYY-MM-DD HH:mm:ss
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
-      
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    } catch (e) {
-      return t('invalid_date');
+      const date = new Date(dateTime);
+      if (isNaN(date.getTime())) return '';
+  
+      return new Intl.DateTimeFormat(navigator.language, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    } catch (error) {
+      console.error('日期格式化错误:', error);
+      return '';
     }
-  }, [diagram, t]);
-
-  // 格式化创建时间
-  const formattedCreateTime = useMemo(() => {
-    if (!diagram?.createdAt) return t('no_create_time');
-    
-    try {
-      const date = new Date(diagram.createdAt);
-      
-      // 格式化为 YYYY-MM-DD HH:mm:ss
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const seconds = String(date.getSeconds()).padStart(2, '0');
-      
-      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-    } catch (e) {
-      return t('invalid_date');
-    }
-  }, [diagram, t]);
+  };
 
   // 渲染Canvas预览
   const renderCanvasPreview = () => {
     if (!diagramData) return null;
-
     return (
       <div className="interactive-preview-container">
         <LayoutContextProvider>
@@ -328,7 +304,6 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
       <div className="flex flex-col h-full">
         <div 
           style={{ height: '200px' }}
-          onClick={handleView}
           className="preview-card-canvas-container"
         >
           {loading ? (
@@ -362,13 +337,13 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
               className="text-color-secondary text-xs block mt-1" 
               type="tertiary"
             >
-              {t('last_modified')}: {formattedUpdateTime}
+              {t('last_modified')}: {formatDateTime(diagram?.updatedAt)}
             </Typography.Text>
             <Typography.Text 
               className="text-color-secondary text-xs block mt-1" 
               type="tertiary"
             >
-              {t('created')}: {formattedCreateTime}
+              {t('create_time')}: {formatDateTime(diagram?.createdAt)}
             </Typography.Text>
           </div>
         </div>

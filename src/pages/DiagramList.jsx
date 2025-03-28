@@ -207,6 +207,26 @@ export default function DiagramList() {
     localStorage.setItem('diagramDisplayMode', mode);
   }, []);
 
+  const formatDateTime = (dateTime) => {
+    if (!dateTime) return '';
+  
+    try {
+      const date = new Date(dateTime);
+      if (isNaN(date.getTime())) return '';
+  
+      return new Intl.DateTimeFormat(navigator.language, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    } catch (error) {
+      console.error('日期格式化错误:', error);
+      return '';
+    }
+  };
+
   return (
     <div className="p-6 theme">
       <div className="mb-6">
@@ -349,8 +369,8 @@ export default function DiagramList() {
                   <tr className="border-b border-color">
                     <th className="px-4 py-2 text-left" scope="col">{t('diagram_name')}</th>
                     <th className="px-4 py-2 text-left" scope="col">{t('database_type')}</th>
-                    <th className="px-4 py-2 text-left" scope="col">{t('create_time')}</th>
                     <th className="px-4 py-2 text-left" scope="col">{t('last_modified_time')}</th>
+                    <th className="px-4 py-2 text-left" scope="col">{t('create_time')}</th>
                     <th className="px-4 py-2 text-right" scope="col">{t('actions')}</th>
                   </tr>
                 </thead>
@@ -359,12 +379,11 @@ export default function DiagramList() {
                     <tr 
                       key={diagram.id} 
                       className="border-b border-color hover-1 cursor-pointer"
-                      onClick={() => handleViewDiagram(diagram.id)}
                     >
                       <td className="px-4 py-3">{diagram.name}</td>
                       <td className="px-4 py-3">{diagram.database}</td>
-                      <td className="px-4 py-3">{diagram.createdAt ? new Date(diagram.createdAt).toLocaleString() : '-'}</td>
-                      <td className="px-4 py-3">{new Date(diagram.updatedAt).toLocaleString()}</td>
+                      <td className="px-4 py-3">{formatDateTime(diagram.updatedAt)}</td>
+                      <td className="px-4 py-3">{formatDateTime(diagram.createdAt)}</td>
                       <td className="px-4 py-3 text-right">
                         <Button
                           icon={<IconSearch />}
