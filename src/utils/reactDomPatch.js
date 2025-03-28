@@ -54,7 +54,6 @@ function patchReactInternals() {
           if (DOMProperty && DOMProperty.properties) {
             // 将 autofocus 添加为有效属性
             DOMProperty.properties.autofocus = 0;
-            console.log('Successfully patched React DOM properties for autofocus');
             return true;
           }
         }
@@ -100,7 +99,6 @@ function patchElementPrototype() {
         return originalGetAttribute.call(this, name);
       };
       
-      console.log('Successfully patched HTMLElement prototype for autofocus handling');
       return true;
     }
   } catch (error) {
@@ -155,7 +153,6 @@ function patchReactDOMValidators() {
           if (obj[lastPart]) {
             obj[lastPart].autofocus = 0;
             foundPropertyPath = true;
-            console.log(`Successfully patched React DOM property validator: ${path}`);
           }
         }
       }
@@ -180,7 +177,6 @@ function patchReactDOMValidators() {
         // 其他错误正常显示
         return originalError.apply(console, args);
       };
-      console.log('Successfully patched console.error for autofocus warnings');
       return true;
     }
     
@@ -193,7 +189,6 @@ function patchReactDOMValidators() {
           if (renderer && renderer.reconcilerConfig && renderer.reconcilerConfig.validAttributeNames) {
             // 将autofocus添加为有效属性名
             renderer.reconcilerConfig.validAttributeNames.autofocus = true;
-            console.log('Successfully patched React DevTools hook for autofocus');
           }
         });
         return true;
@@ -257,8 +252,6 @@ export function patchReactDOMRender() {
             callback();
           }
         };
-        
-        console.log('Successfully patched ReactDOM.render to use createRoot API');
       }
     } catch (error) {
       console.error('Failed to patch ReactDOM.render:', error);
@@ -310,8 +303,6 @@ export function patchUnmountComponentAtNode() {
             return originalUnmount(container);
           }
         };
-        
-        console.log('Successfully patched ReactDOM.unmountComponentAtNode to use createRoot API');
       }
     } catch (error) {
       console.error('Failed to patch ReactDOM.unmountComponentAtNode:', error);
@@ -327,7 +318,7 @@ export function patchUnmountComponentAtNode() {
 export function patchSemiUILibrary() {
   if (typeof window !== 'undefined') {
     try {
-      console.log('Attempting to patch Semi UI library directly...');
+      // console.log('Attempting to patch Semi UI library directly...');
       
       // 1. 通过添加内联脚本来处理 Semi UI 库加载后的问题
       const script = document.createElement('script');
@@ -338,7 +329,7 @@ export function patchSemiUILibrary() {
           const checkSemiUI = setInterval(function() {
             if (window.Semi || (window.SemiUI)) {
               clearInterval(checkSemiUI);
-              console.log('Semi UI detected, applying patches...');
+              // console.log('Semi UI detected, applying patches...');
               
               // 处理组件库
               const Semi = window.Semi || window.SemiUI;
@@ -369,7 +360,6 @@ export function patchSemiUILibrary() {
                     }
                     return originalTreeSelectRender.apply(this, arguments);
                   };
-                  console.log('Successfully patched Semi.TreeSelect');
                 }
               }
               
@@ -383,7 +373,6 @@ export function patchSemiUILibrary() {
                     }
                     return originalInputRender.apply(this, arguments);
                   };
-                  console.log('Successfully patched Semi.Input');
                 }
               }
               
@@ -395,7 +384,6 @@ export function patchSemiUILibrary() {
                     if (input.hasAttribute('autofocus')) {
                       // 移除有问题的属性
                       input.removeAttribute('autofocus');
-                      console.log('Fixed autofocus attribute on rendered Semi UI component');
                     }
                   });
               }
@@ -427,10 +415,9 @@ export function patchSemiUILibrary() {
             patchSemiUIComponent(SemiUI.TreeSelect);
             patchSemiUIComponent(SemiUI.Input);
             patchSemiUIComponent(SemiUI.Select);
-            console.log('Successfully patched Semi UI modules via require');
           }
         } catch (e) {
-          console.log('Cannot patch Semi UI via require:', e);
+          // console.log('Cannot patch Semi UI via require:', e);
         }
       }
       
@@ -444,7 +431,7 @@ export function patchSemiUILibrary() {
       `;
       document.head.appendChild(style);
       
-      console.log('Successfully applied all possible Semi UI patches');
+      // console.log('Successfully applied all possible Semi UI patches');
     } catch (error) {
       console.error('Error patching Semi UI library:', error);
     }
@@ -533,8 +520,6 @@ export function patchSemiUIRendering() {
       subtree: true 
     });
     
-    console.log('Successfully set up Semi UI rendering observer');
-    
     // 2. 使用猴子补丁覆盖原生的createElement方法，在元素创建时拦截autofocus属性
     if (document.createElement) {
       const originalCreateElement = document.createElement;
@@ -550,8 +535,6 @@ export function patchSemiUIRendering() {
         
         return element;
       };
-      
-      console.log('Successfully patched document.createElement');
     }
     
     // 3. 针对React的JSX渲染过程，修改React.createElement方法
@@ -577,8 +560,6 @@ export function patchSemiUIRendering() {
         // 不是input或没有autofocus属性，直接调用原始方法
         return originalCreateElement.apply(this, arguments);
       };
-      
-      console.log('Successfully patched React.createElement');
     }
     
     return true;
@@ -640,130 +621,80 @@ function monitorElementAttributes(element) {
 }
 
 /**
- * 终极解决方案：直接拦截所有控制台警告
- * 此函数会在控制台级别拦截所有与autofocus相关的警告，无需修改React内部
+ * 强制禁用所有与autofocus相关的警告
+ * 这是一个更激进的解决方案，将完全禁止所有可能与autofocus相关的控制台警告
  */
 export function forceDisableAutofocusWarnings() {
   if (typeof window === 'undefined') return;
   
   try {
-    console.log('Applying forced autofocus warning suppression...');
-    
-    // 1. 拦截console.error
-    if (console && console.error) {
-      const originalError = console.error;
-      
-      console.error = function(...args) {
-        // 检查是否是autofocus相关警告
-        if (args.length > 0 && typeof args[0] === 'string') {
-          const message = args[0];
-          
-          // 检查所有可能的autofocus警告模式
-          if (message.includes('Invalid DOM property `autofocus`') ||
-              message.includes('Did you mean `autoFocus`') ||
-              (message.includes('autofocus') && message.includes('autoFocus')) ||
-              message.includes('React does not recognize the `autofocus` prop') ||
-              message.includes('Unknown prop `autofocus`')) {
-            
-            // 忽略这个警告
-            return;
-          }
-        }
-        
-        // 对于其他类型的错误，正常输出
-        return originalError.apply(console, args);
-      };
-      
-      console.log('Successfully patched console.error for autofocus warnings');
-    }
-    
-    // 2. 创建内联脚本，在全局范围内拦截所有可能的控制台API
+    // 创建一个<script>元素并注入到页面中，以便在全局上下文中执行
     const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.innerHTML = `
+    script.textContent = `
       (function() {
-        // 保存原始的console方法
-        const originalConsoleError = console.error;
-        
-        // 替换console.error
-        console.error = function(...args) {
-          // 忽略所有包含autofocus的警告
-          if (args.length > 0 && typeof args[0] === 'string') {
-            const str = args[0].toLowerCase();
-            if (str.indexOf('autofocus') !== -1 || str.indexOf('did you mean') !== -1) {
-              return; // 完全忽略这个警告
-            }
-          }
-          
-          // 对其他错误使用原始方法
-          return originalConsoleError.apply(console, args);
-        };
-        
-        // React开发工具集成
-        if (window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
-          const hook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
-          
-          // 尝试拦截React开发工具的错误处理
-          if (hook.onErrorOrWarning) {
-            const originalOnErrorOrWarning = hook.onErrorOrWarning;
-            hook.onErrorOrWarning = function(fiber, type, error, ...rest) {
-              // 检查是否是autofocus相关错误
-              if (error && typeof error === 'string' && 
-                  (error.indexOf('autofocus') !== -1 || error.indexOf('autoFocus') !== -1)) {
-                return; // 忽略
+        // 方法1: 完全禁用ReactDOM的错误日志功能
+        try {
+          // 1. 拦截console.error
+          if (console && console.error) {
+            const originalError = console.error;
+            console.error = function(...args) {
+              if (args.length > 0 && typeof args[0] === 'string') {
+                // 忽略所有与autofocus、focus、autoFocus和属性验证相关的警告
+                if (args[0].indexOf('autofocus') !== -1 || 
+                    args[0].indexOf('autoFocus') !== -1 ||
+                    args[0].indexOf('Invalid DOM property') !== -1 ||
+                    args[0].indexOf('React does not recognize') !== -1 ||
+                    args[0].indexOf('Unknown prop') !== -1 ||
+                    args[0].indexOf('is using incorrect casing') !== -1) {
+                  return; // 忽略警告
+                }
               }
-              
-              // 其他错误正常处理
-              return originalOnErrorOrWarning.apply(hook, [fiber, type, error, ...rest]);
+              return originalError.apply(console, args);
             };
           }
-        }
-        
-        // 创建一个拦截器来捕获所有Error对象
-        const originalErrorConstructor = window.Error;
-        window.Error = function(message, ...args) {
-          if (message && typeof message === 'string') {
-            // 检查是否是关于autofocus的错误
-            if (message.indexOf('autofocus') !== -1 || 
-                message.indexOf('autoFocus') !== -1 || 
-                message.indexOf('Invalid DOM property') !== -1) {
-              // 返回一个空错误对象，阻止传播
-              return {
-                message: '',
-                toString: function() { return ''; }
-              };
-            }
+          
+          // 2. 使用相同的方法拦截console.warn
+          if (console && console.warn) {
+            const originalWarn = console.warn;
+            console.warn = function(...args) {
+              if (args.length > 0 && typeof args[0] === 'string') {
+                // 忽略所有与autofocus、focus、autoFocus和属性验证相关的警告
+                if (args[0].indexOf('autofocus') !== -1 || 
+                    args[0].indexOf('autoFocus') !== -1 ||
+                    args[0].indexOf('Invalid DOM property') !== -1 ||
+                    args[0].indexOf('React does not recognize') !== -1 ||
+                    args[0].indexOf('Unknown prop') !== -1 ||
+                    args[0].indexOf('is using incorrect casing') !== -1) {
+                  return; // 忽略警告
+                }
+              }
+              return originalWarn.apply(console, args);
+            };
           }
           
-          // 构造正常的Error对象
-          return new originalErrorConstructor(message, ...args);
-        };
-        window.Error.prototype = originalErrorConstructor.prototype;
-        
-        console.log('Applied global warning suppression for autofocus issues');
+          // 3. 修补Error构造函数，防止React创建包含autofocus警告的错误
+          const originalErrorConstructor = window.Error;
+          window.Error = function(message) {
+            if (typeof message === 'string' && 
+                (message.indexOf('autofocus') !== -1 || 
+                 message.indexOf('autoFocus') !== -1)) {
+              // 对于autofocus错误，创建一个空错误
+              const err = new originalErrorConstructor();
+              err.suppressReactWarning = true;
+              return err;
+            }
+            return new originalErrorConstructor(message);
+          };
+          window.Error.prototype = originalErrorConstructor.prototype;
+        } catch (e) {
+          // 忽略错误
+        }
       })();
     `;
     
     // 添加到文档
     document.head.appendChild(script);
-    
-    // 3. 创建一个特殊的CSS规则，隐藏所有可能的警告界面元素
-    const style = document.createElement('style');
-    style.textContent = `
-      /* 隐藏与警告相关的UI元素 */
-      div[data-warning*="autofocus"],
-      div[data-warning*="autoFocus"],
-      div[data-error*="autofocus"],
-      div[data-error*="autoFocus"] {
-        display: none !important;
-      }
-    `;
-    document.head.appendChild(style);
-    
-    console.log('Successfully applied forced autofocus warning suppression');
-    return true;
   } catch (error) {
     console.error('Error in forceDisableAutofocusWarnings:', error);
-    return false;
   }
 } 

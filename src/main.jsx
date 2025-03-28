@@ -34,11 +34,14 @@ fixAutofocusInDOM();
 // 终极解决方案：强制禁用所有autofocus相关警告
 forceDisableAutofocusWarnings();
 
+// 检查是否是生产环境
+const isProduction = import.meta.env.PROD || import.meta.env.MODE === 'production';
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <LocaleProvider locale={en_US}>
     <App />
-    <Analytics />
-    <SpeedInsights />
+    {isProduction && <Analytics debug={false} mode="production" />}
+    {isProduction && <SpeedInsights />}
   </LocaleProvider>,
 );

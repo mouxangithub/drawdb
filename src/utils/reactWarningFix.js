@@ -64,8 +64,6 @@ export function disableReactAutofocusWarning() {
     setTimeout(fixAutofocusInDOM, 500);
     setTimeout(fixAutofocusInDOM, 1000);
     setTimeout(fixAutofocusInDOM, 2000);
-    
-    console.log('Successfully enabled autofocus warnings suppression and automatic fixing');
   }
 }
 
@@ -80,7 +78,7 @@ export function fixAutofocusInDOM() {
     const elements = document.querySelectorAll('[autofocus]');
     
     if (elements.length > 0) {
-      console.log(`Found ${elements.length} elements with autofocus attribute, fixing...`);
+      // console.log(`Found ${elements.length} elements with autofocus attribute, fixing...`);
       
       elements.forEach(element => {
         try {
@@ -169,7 +167,7 @@ export function disableFindDOMNodeWarning() {
       return originalConsoleWarn.apply(console, args);
     };
     
-    console.log('Successfully disabled findDOMNode and React Router future flag warnings');
+    // console.log('Successfully disabled findDOMNode and React Router future flag warnings');
   }
 }
 
@@ -198,7 +196,7 @@ export function disableFindDOMNodeDeprecatedWarning() {
       return originalConsoleError.apply(console, args);
     };
     
-    console.log('Successfully disabled findDOMNode deprecated warnings in console.error');
+    // console.log('Successfully disabled findDOMNode deprecated warnings in console.error');
   }
 }
 
@@ -275,7 +273,7 @@ export function disableReactDomRenderWarning() {
     console.error = newConsoleError;
     
     // 现在，当我们调用 disableReactDomRenderWarning 时，它会处理两种控制台函数的警告
-    console.log('Successfully disabled ReactDOM render and unmountComponentAtNode deprecation warnings');
+    // console.log('Successfully disabled ReactDOM render and unmountComponentAtNode deprecation warnings');
   }
 }
 
@@ -373,7 +371,7 @@ function handleAutofocusNode(node) {
 export function patchSemiUIComponents() {
   if (typeof window !== 'undefined') {
     try {
-      console.log('Applying special patch for Semi UI components...');
+      // console.log('Applying special patch for Semi UI components...');
       
       // 1. 修补 Semi UI 的基本组件
       patchSemiUIComponentClasses();
@@ -384,7 +382,7 @@ export function patchSemiUIComponents() {
       // 3. 使用 MutationObserver 来监视 Semi UI 组件的动态变化
       setupSemiUIObserver();
       
-      console.log('Successfully applied special patch for Semi UI components');
+      // console.log('Successfully applied special patch for Semi UI components');
     } catch (error) {
       console.error('Error applying Semi UI patch:', error);
     }
