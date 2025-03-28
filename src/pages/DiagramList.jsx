@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Button, 
@@ -9,7 +9,13 @@ import {
   Notification,
   Tabs,
   Toast,
-  Modal
+  Modal,
+  Select,
+  DatePicker,
+  Popover,
+  Space,
+  Tag,
+  Pagination
 } from '@douyinfe/semi-ui';
 import { 
   IconPlus, 
@@ -18,45 +24,105 @@ import {
   IconGridRectangle,
   IconEdit,
   IconShareStroked,
-  IconDelete
+  IconDelete,
+  IconFilter,
+  IconClose,
+  IconCalendar
 } from '@douyinfe/semi-icons';
 import { diagramApi } from '../services/api';
 import { useTranslation } from 'react-i18next';
 import ShareModal from '../components/common/ShareModal';
 import DiagramPreviewCard from '../components/common/DiagramPreviewCard';
 import DiagramViewModal from '../components/common/DiagramViewModal';
+import ThemeLanguageSwitcher from '../components/common/ThemeLanguageSwitcher';
+import { formatDateTime } from '../utils/utils';
 import './DiagramList.css'; // 添加CSS导入
 
 /**
  * 图表列表页面
  * 显示所有图表，提供新建、编辑、删除、分享等功能
- * 重构版本：增加了图表预览功能
+ * 重构版本：增加了图表预览功能、数据库筛选和时间筛选
  */
 export default function DiagramList() {
+  // 图表数据状态
   const [diagrams, setDiagrams] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(9); // 默认每页9条记录，适合3x3网格
+  
+  // 搜索和筛选状态
   const [searchTerm, setSearchTerm] = useState('');
+  const [databaseFilter, setDatabaseFilter] = useState([]);
+  const [createTimeRange, setCreateTimeRange] = useState([null, null]);
+  const [updateTimeRange, setUpdateTimeRange] = useState([null, null]);
+  const [filtersVisible, setFiltersVisible] = useState(false);
+  const [activeFilters, setActiveFilters] = useState(0);
+  const [databaseOptions, setDatabaseOptions] = useState([]);
+  
+  // 模态框状态
   const [shareModalVisible, setShareModalVisible] = useState(false);
   const [viewModalVisible, setViewModalVisible] = useState(false);
   const [currentDiagram, setCurrentDiagram] = useState(null);
   const [detailedDiagram, setDetailedDiagram] = useState(null);
   const [displayMode, setDisplayMode] = useState('grid'); // 'grid' 或 'table'
+  
   const { t } = useTranslation();
   const navigate = useNavigate();
   
   // 使用ref避免在状态更新过程中获取过时的状态值
   const loadingRef = useRef(false);
+  const searchTimeout = useRef(null);
   
-  // 加载图表列表
-  const fetchDiagrams = useCallback(async () => {
+  // 加载图表列表 - 修改为使用筛选参数
+  const fetchDiagrams = useCallback(async (page = currentPage, size = pageSize) => {
     if (loadingRef.current) return; // 防止重复请求
     
     try {
       loadingRef.current = true;
       setLoading(true);
       
-      const data = await diagramApi.getAll();
-      setDiagrams(data);
+      // 构建查询参数
+      const params = {
+        page,
+        pageSize: size,
+        sortBy: 'lastModified',
+        sortOrder: 'DESC'
+      };
+      
+      // 添加搜索参数（如果有）
+      if (searchTerm) {
+        params.name = searchTerm;
+      }
+      
+      // 添加数据库筛选 - 修改为支持多选
+      if (databaseFilter && Array.isArray(databaseFilter) && databaseFilter.length > 0) {
+        params.database = databaseFilter.join(',');
+      }
+      
+      // 添加创建时间筛选
+      if (createTimeRange[0]) {
+        params.createdAtStart = createTimeRange[0];
+      }
+      if (createTimeRange[1]) {
+        params.createdAtEnd = createTimeRange[1];
+      }
+      
+      // 添加更新时间筛选
+      if (updateTimeRange[0]) {
+        params.updatedAtStart = updateTimeRange[0];
+      }
+      if (updateTimeRange[1]) {
+        params.updatedAtEnd = updateTimeRange[1];
+      }
+      
+      // 发送请求
+      const result = await diagramApi.getAll(params);
+      
+      // 更新状态
+      setDiagrams(result.data);
+      setTotal(result.pagination.total);
+      setCurrentPage(result.pagination.page);
     } catch (error) {
       console.error('获取图表列表失败:', error);
       Notification.error({
@@ -68,12 +134,31 @@ export default function DiagramList() {
       loadingRef.current = false;
       setLoading(false);
     }
-  }, [t]);
+  }, [t, searchTerm, databaseFilter, createTimeRange, updateTimeRange, currentPage, pageSize]);
 
-  // 初始化加载图表
+  // 初始加载和筛选变化时重新获取数据
+  useEffect(() => {
+    // 在首次加载或筛选条件变化时重置到第一页
+    fetchDiagrams(1, pageSize);
+  }, [searchTerm, databaseFilter, createTimeRange, updateTimeRange, pageSize]);
+
+  // 页码变化时获取数据
+  const handlePageChange = useCallback((page) => {
+    setCurrentPage(page);
+    fetchDiagrams(page, pageSize);
+  }, [fetchDiagrams, pageSize]);
+
+  // 每页显示数量变化时获取数据
+  const handlePageSizeChange = useCallback((size) => {
+    setPageSize(size);
+    // 重置到第一页
+    setCurrentPage(1);
+    fetchDiagrams(1, size);
+  }, [fetchDiagrams]);
+
+  // 初始化加载图表和显示模式
   useEffect(() => {
     document.title = "drawDB | " + t("diagram_list");
-    fetchDiagrams();
     
     // 确保页面背景适配主题
     document.body.setAttribute('class', 'theme');
@@ -89,12 +174,62 @@ export default function DiagramList() {
       document.body.removeAttribute('class');
       loadingRef.current = false;
     };
-  }, [t, fetchDiagrams]);
+  }, [t]);
 
-  // 过滤图表
-  const filteredDiagrams = diagrams.filter(
-    (diagram) => diagram.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // 获取所有可用的数据库类型选项
+  useEffect(() => {
+    const fetchDatabaseOptions = async () => {
+      try {
+        // 获取所有数据库类型（这里可以添加专门的接口，或者从现有数据中提取）
+        const response = await diagramApi.getDatabaseTypes();
+        if (response && Array.isArray(response)) {
+          setDatabaseOptions(response.map(type => ({
+            label: type,
+            value: type
+          })));
+        }
+      } catch (error) {
+        console.error('获取数据库类型失败:', error);
+        // 失败时使用空列表
+        setDatabaseOptions([]);
+      }
+    };
+    
+    fetchDatabaseOptions();
+  }, []);
+
+  // 搜索处理 - 使用防抖
+  const handleSearch = useCallback((value) => {
+    setSearchTerm(value);
+    
+    // 清除之前的定时器
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+    
+    // 设置新的定时器，延迟500ms执行查询
+    searchTimeout.current = setTimeout(() => {
+      fetchDiagrams(1, pageSize);
+    }, 500);
+  }, [fetchDiagrams, pageSize]);
+
+  // 重置所有筛选条件 - 修改为支持多选数据库类型
+  const resetFilters = useCallback(() => {
+    setDatabaseFilter([]);
+    setCreateTimeRange([null, null]);
+    setUpdateTimeRange([null, null]);
+    // 重置后自动刷新数据
+  }, []);
+
+  // 计算活跃的筛选条件数量 - 修改为支持多选数据库类型
+  useEffect(() => {
+    let count = 0;
+    if (databaseFilter && Array.isArray(databaseFilter) && databaseFilter.length > 0) count++;
+    if (createTimeRange[0] || createTimeRange[1]) count++;
+    if (updateTimeRange[0] || updateTimeRange[1]) count++;
+    
+    setActiveFilters(count);
+  }, [databaseFilter, createTimeRange, updateTimeRange]);
 
   // 创建新图表
   const handleCreateDiagram = useCallback(() => {
@@ -207,28 +342,158 @@ export default function DiagramList() {
     localStorage.setItem('diagramDisplayMode', mode);
   }, []);
 
-  const formatDateTime = (dateTime) => {
-    if (!dateTime) return '';
-  
-    try {
-      const date = new Date(dateTime);
-      if (isNaN(date.getTime())) return '';
-  
-      return new Intl.DateTimeFormat(navigator.language, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    } catch (error) {
-      console.error('日期格式化错误:', error);
-      return '';
+  // 筛选面板内容 - 更新为使用i18n
+  const filterContent = (
+    <div className="p-4 w-80 filter-popover-content">
+      <div className="flex justify-between items-center mb-4">
+        <Typography.Title heading={5} className="text-color">
+          {t('advanced_filters')}
+        </Typography.Title>
+        <Button 
+          type="tertiary" 
+          theme="borderless" 
+          icon={<IconClose />} 
+          size="small"
+          onClick={resetFilters}
+          aria-label={t('reset_filters')}
+        >
+          {t('reset')}
+        </Button>
+      </div>
+      
+      <div className="filter-group">
+        <Typography.Text className="text-color mb-2 block">
+          {t('database_type')}
+        </Typography.Text>
+        <Select
+          placeholder={t('select_database_type')}
+          style={{ width: '100%' }}
+          value={databaseFilter}
+          onChange={setDatabaseFilter}
+          optionList={databaseOptions}
+          multiple
+          clearable
+          aria-label={t('select_database_type')}
+          emptyContent={t('no_database_types')}
+          maxTagCount={2}
+        />
+      </div>
+      
+      <div className="filter-group">
+        <Typography.Text className="text-color mb-2 block">
+          {t('create_time_range')}
+        </Typography.Text>
+        <div className="date-range-container">
+          <DatePicker
+            type="dateRange"
+            style={{ width: '100%' }}
+            value={createTimeRange}
+            onChange={setCreateTimeRange}
+            placeholder={[t('start_date'), t('end_date')]}
+            aria-label={t('create_time_range')}
+            format="yyyy-MM-dd"
+            localeCode={t('locale_code')}
+          />
+        </div>
+      </div>
+      
+      <div className="filter-group">
+        <Typography.Text className="text-color mb-2 block">
+          {t('update_time_range')}
+        </Typography.Text>
+        <div className="date-range-container">
+          <DatePicker
+            type="dateRange"
+            style={{ width: '100%' }}
+            value={updateTimeRange}
+            onChange={setUpdateTimeRange}
+            placeholder={[t('start_date'), t('end_date')]}
+            aria-label={t('update_time_range')}
+            format="yyyy-MM-dd"
+            localeCode={t('locale_code')}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  // 活跃筛选器标签 - 修改为支持多选数据库类型
+  const renderActiveFilterTags = () => {
+    const tags = [];
+    
+    if (databaseFilter && Array.isArray(databaseFilter) && databaseFilter.length > 0) {
+      tags.push(
+        <Tag 
+          key="db-filter" 
+          closable 
+          onClose={() => setDatabaseFilter([])}
+          color="blue"
+          className="filter-tag"
+        >
+          <span className="tag-label">{t('database')}:</span>
+          <span className="tag-value">{databaseFilter.join(', ')}</span>
+        </Tag>
+      );
     }
+    
+    if (createTimeRange[0] || createTimeRange[1]) {
+      const startStr = createTimeRange[0] ? formatDateTime(createTimeRange[0]) : '...';
+      const endStr = createTimeRange[1] ? formatDateTime(createTimeRange[1]) : '...';
+      
+      tags.push(
+        <Tag 
+          key="create-time-filter" 
+          closable 
+          onClose={() => setCreateTimeRange([null, null])}
+          color="green"
+          className="filter-tag"
+        >
+          <span className="tag-label">{t('create_time')}:</span>
+          <span className="tag-value">{startStr} - {endStr}</span>
+        </Tag>
+      );
+    }
+    
+    if (updateTimeRange[0] || updateTimeRange[1]) {
+      const startStr = updateTimeRange[0] ? formatDateTime(updateTimeRange[0]) : '...';
+      const endStr = updateTimeRange[1] ? formatDateTime(updateTimeRange[1]) : '...';
+      
+      tags.push(
+        <Tag 
+          key="update-time-filter" 
+          closable 
+          onClose={() => setUpdateTimeRange([null, null])}
+          color="orange"
+          className="filter-tag"
+        >
+          <span className="tag-label">{t('last_modified_time')}:</span>
+          <span className="tag-value">{startStr} - {endStr}</span>
+        </Tag>
+      );
+    }
+    
+    return tags.length > 0 ? (
+      <div className="active-filters-container">
+        {tags}
+        {tags.length > 1 && (
+          <Button
+            size="small"
+            type="tertiary"
+            onClick={resetFilters}
+            icon={<IconClose />}
+          >
+            {t('clear_all_filters')}
+          </Button>
+        )}
+      </div>
+    ) : null;
   };
 
   return (
     <div className="p-6 theme">
+      {/* 添加主题和语言切换组件 */}
+      <ThemeLanguageSwitcher />
+      
       <div className="mb-6">
         <Typography.Title heading={2} className="text-color">
           {t("diagram_list")}
@@ -239,17 +504,42 @@ export default function DiagramList() {
       </div>
       
       <Card className="card-theme">
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between items-center mb-4 filter-controls">
           <div className="flex items-center gap-4">
             <Input
               prefix={<IconSearch />}
               placeholder={t('search_diagram')}
               value={searchTerm}
-              onChange={setSearchTerm}
+              onChange={handleSearch}
               style={{ width: '300px' }}
               className="text-color"
               aria-label={t('search_diagram')}
             />
+            <Popover
+              content={filterContent}
+              trigger="click"
+              position="bottomLeft"
+              visible={filtersVisible}
+              onVisibleChange={setFiltersVisible}
+              className="text-color"
+            >
+              <Button
+                icon={<IconFilter />}
+                type={activeFilters > 0 ? 'primary' : 'tertiary'}
+                className={activeFilters > 0 ? 'filter-button-active' : ''}
+                aria-label={t('advanced_filters')}
+                aria-expanded={filtersVisible}
+                aria-haspopup="dialog"
+                onClick={() => setFiltersVisible(!filtersVisible)}
+              >
+                {t('filters')}
+                {activeFilters > 0 && (
+                  <Tag size="small" type="primary" style={{ marginLeft: 8 }}>
+                    {activeFilters}
+                  </Tag>
+                )}
+              </Button>
+            </Popover>
             <div className="flex items-center">
               <Button
                 icon={<IconGridRectangle />}
@@ -278,6 +568,9 @@ export default function DiagramList() {
           </Button>
         </div>
 
+        {/* 渲染活跃的筛选标签 */}
+        {renderActiveFilterTags()}
+
         {loading ? (
           <div className="text-center py-8 text-color">
             <div className="semi-spin semi-spin-large semi-spin-wrapper">
@@ -291,7 +584,7 @@ export default function DiagramList() {
               </div>
             </div>
           </div>
-        ) : filteredDiagrams.length === 0 ? (
+        ) : diagrams.length === 0 ? (
           <Empty
             image={
               <div className="empty-diagram-illustration">
@@ -331,11 +624,11 @@ export default function DiagramList() {
             }
             title={t('no_diagram_data')}
             description={
-              searchTerm ? t('no_matching_diagrams') : t('click_to_create')
+              searchTerm || activeFilters > 0 ? t('no_matching_diagrams') : t('click_to_create')
             }
             className="text-color"
           >
-            {!searchTerm && (
+            {!searchTerm && activeFilters === 0 && (
               <div className="mt-6">
                 <button 
                   className="empty-state-create-button"
@@ -352,7 +645,7 @@ export default function DiagramList() {
           <>
             {displayMode === 'grid' ? (
               <div className="grid grid-cols-3 gap-4">
-                {filteredDiagrams.map((diagram) => (
+                {diagrams.map((diagram) => (
                   <DiagramPreviewCard
                     key={diagram.id}
                     diagram={diagram}
@@ -375,7 +668,7 @@ export default function DiagramList() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredDiagrams.map((diagram) => (
+                  {diagrams.map((diagram) => (
                     <tr 
                       key={diagram.id} 
                       className="border-b border-color hover-1 cursor-pointer"
@@ -435,6 +728,27 @@ export default function DiagramList() {
                   ))}
                 </tbody>
               </table>
+            )}
+            
+            {/* 添加分页控件 - 确保使用国际化文本 */}
+            {total > 0 && (
+              <div className="flex justify-center mt-6">
+                <Pagination
+                  total={total}
+                  currentPage={currentPage}
+                  pageSize={pageSize}
+                  pageSizeOpts={[9, 12, 15, 18]}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  showSizeChanger
+                  aria-label={t('pagination')}
+                  popoverProps={{ position: 'topRight' }}
+                  style={{ marginTop: '16px' }}
+                  showTotal={(total, range) => 
+                    t('pagination_showing', { start: range[0], end: range[1], total: total })
+                  }
+                />
+              </div>
             )}
           </>
         )}

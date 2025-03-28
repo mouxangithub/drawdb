@@ -44,6 +44,7 @@ Compared to the original project, this fork adds several key features:
 - **Enhanced Preview**: Interactive diagram preview with zoom and pan capabilities
 - **Optimized UI**: Refined user interface with control panel centered at bottom and floating info panel
 - **Creation Time Display**: Added creation time display in both grid and table view modes
+- **Advanced Filtering System**: Comprehensive filtering by database type, creation time, and update time
 
 ## ✨ Core Features
 
@@ -51,6 +52,7 @@ Compared to the original project, this fork adds several key features:
 - **Interactive Preview**: Diagram thumbnails and full-featured preview mode with drag and zoom capabilities
 - **Diagram Sharing**: Generate sharing links to collaborate with team members or clients
 - **Internationalization**: Support for multiple languages, including English and Chinese interfaces
+- **Advanced Filtering**: Filter diagrams by name, database type, creation date, and modification date
 - **Free to Use**: All features completely free, no account registration required
 
 ## 🚀 Quick Start
@@ -140,6 +142,15 @@ drawdb/
 │  ├─ animations/         # Animation components
 │  ├─ assets/             # Static resources
 │  ├─ components/         # Reusable components
+│  │  ├─ common/          # Common UI components
+│  │  │  ├─ DiagramPreviewCard/  # Interactive diagram preview cards
+│  │  │  ├─ DiagramViewModal/    # Full diagram preview modal
+│  │  │  ├─ ShareModal/          # Diagram sharing modal
+│  │  │  └─ ThemeLanguageSwitcher/ # Theme and language switcher component
+│  │  ├─ EditorCanvas/    # Canvas editor components
+│  │  ├─ EditorHeader/    # Editor header components
+│  │  ├─ EditorSidePanel/ # Editor side panel components
+│  │  └─ LexicalEditor/   # Rich text editor components
 │  ├─ context/            # React contexts
 │  ├─ data/               # Static data and constants
 │  ├─ hooks/              # Custom React hooks

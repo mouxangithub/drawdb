@@ -23,6 +23,7 @@ import EnumsContextProvider from '../../context/EnumsContext';
 import TypesContextProvider from '../../context/TypesContext';
 import TasksContextProvider from '../../context/TasksContext';
 import { ReadOnlyContextProvider } from '../../context/ReadOnlyContext';
+import { formatDateTime } from '../../utils/utils';
 import './DiagramViewModal.css'; // 导入CSS样式
 
 /**
@@ -75,31 +76,6 @@ const calculateInitialView = (diagram) => {
   } catch (error) {
     console.error('计算初始视图错误:', error);
     return { zoom: 0.8, pan: { x: 0, y: 0 } };
-  }
-};
-
-/**
- * 格式化日期时间
- * @param {string|Date} dateTime - 日期时间字符串或Date对象
- * @returns {string} 格式化后的日期时间字符串
- */
-const formatDateTime = (dateTime) => {
-  if (!dateTime) return '';
-
-  try {
-    const date = new Date(dateTime);
-    if (isNaN(date.getTime())) return '';
-
-    return new Intl.DateTimeFormat(navigator.language, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
-  } catch (error) {
-    console.error('日期格式化错误:', error);
-    return '';
   }
 };
 

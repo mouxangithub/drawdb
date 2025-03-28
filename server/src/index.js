@@ -79,6 +79,18 @@ app.get(`${apiBasePath}/docs/swagger-ui-init.js`, (req, res, next) => {
 });
 
 // API路由
+// 添加API无缓存中间件
+app.use(`${apiBasePath}`, (req, res, next) => {
+  // 为所有API请求禁用缓存
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.setHeader('Surrogate-Control', 'no-store');
+  
+  // 继续处理请求
+  next();
+});
+
 app.use(`${apiBasePath}/diagrams`, diagramRoutes);
 
 // 获取静态文件路径

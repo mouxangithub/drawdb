@@ -14,36 +14,117 @@ const router = express.Router();
  * @swagger
  * /diagrams:
  *   get:
- *     summary: 获取所有图表
+ *     summary: 获取图表列表
  *     tags: [Diagrams]
- *     description: 获取系统中的所有图表列表
+ *     description: 获取系统中的图表列表，支持分页和筛选
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: 页码
+ *       - in: query
+ *         name: pageSize
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 每页记录数
+ *       - in: query
+ *         name: name
+ *         schema:
+ *           type: string
+ *         description: 图表名称（模糊匹配）
+ *       - in: query
+ *         name: database
+ *         schema:
+ *           type: string
+ *         description: 数据库类型
+ *       - in: query
+ *         name: createdAtStart
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: 创建时间开始
+ *       - in: query
+ *         name: createdAtEnd
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: 创建时间结束
+ *       - in: query
+ *         name: updatedAtStart
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: 更新时间开始
+ *       - in: query
+ *         name: updatedAtEnd
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: 更新时间结束
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           default: lastModified
+ *         description: 排序字段
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [ASC, DESC]
+ *           default: DESC
+ *         description: 排序方向
  *     responses:
  *       200:
  *         description: 成功获取图表列表
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     description: 图表的唯一ID
- *                   name:
- *                     type: string
- *                     description: 图表名称
- *                   content:
+ *               type: object
+ *               properties:
+ *                 data:
+ *                   type: array
+ *                   items:
  *                     type: object
- *                     description: 图表内容
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                     description: 创建时间
- *                   updatedAt:
- *                     type: string
- *                     format: date-time
- *                     description: 最后更新时间
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         description: 图表的唯一ID
+ *                       name:
+ *                         type: string
+ *                         description: 图表名称
+ *                       database:
+ *                         type: string
+ *                         description: 数据库类型
+ *                       content:
+ *                         type: object
+ *                         description: 图表内容
+ *                       createdAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: 创建时间
+ *                       updatedAt:
+ *                         type: string
+ *                         format: date-time
+ *                         description: 最后更新时间
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       description: 总记录数
+ *                     page:
+ *                       type: integer
+ *                       description: 当前页码
+ *                     pageSize:
+ *                       type: integer
+ *                       description: 每页记录数
+ *                     totalPages:
+ *                       type: integer
+ *                       description: 总页数
  *       500:
  *         description: 服务器错误
  */
@@ -65,6 +146,28 @@ router.get('/', diagramController.getAllDiagrams);
  *         description: 服务器错误
  */
 router.get('/latest', diagramController.getLatestDiagram);
+
+/**
+ * @swagger
+ * /diagrams/database-types:
+ *   get:
+ *     summary: 获取所有数据库类型
+ *     tags: [Diagrams]
+ *     description: 获取系统中所有已使用的数据库类型列表
+ *     responses:
+ *       200:
+ *         description: 成功获取数据库类型列表
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
+ *                 description: 数据库类型名称
+ *       500:
+ *         description: 服务器错误
+ */
+router.get('/database-types', diagramController.getDatabaseTypes);
 
 /**
  * @swagger

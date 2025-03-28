@@ -218,4 +218,134 @@
   .empty-state-create-button:hover {
     transform: none;
   }
+}
+
+/* 筛选器相关样式 */
+.filter-button-active {
+  position: relative;
+}
+
+.filter-button-active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  background-color: var(--semi-color-primary);
+  border-radius: 50%;
+}
+
+/* 筛选弹出框样式增强 */
+.filter-popover-content {
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: var(--semi-shadow-elevated);
+}
+
+.filter-group {
+  position: relative;
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.filter-group:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: var(--semi-color-border);
+}
+
+/* 活跃筛选条件标签样式 */
+.active-filters-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 16px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.filter-tag .tag-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.filter-tag .tag-value {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filter-tag:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 暗色主题适配 */
+:root[theme-mode="dark"] .filter-group:not(:last-child)::after {
+  background-color: var(--semi-color-border);
+  opacity: 0.3;
+}
+
+/* 响应式布局 */
+@media (max-width: 992px) {
+  .filter-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .filter-controls > * {
+    margin-bottom: 8px;
+  }
+}
+
+/* 日期范围选择器样式 */
+.date-range-container {
+  position: relative;
+}
+
+.date-range-container .semi-datepicker {
+  width: 100%;
+}
+
+/* RTL 支持 */
+[dir="rtl"] .filter-tag .tag-label {
+  margin-right: 0;
+  margin-left: 4px;
+}
+
+/* 高对比度支持 */
+@media (prefers-contrast: more) {
+  .filter-group:not(:last-child)::after {
+    height: 2px;
+  }
+  
+  .filter-tag {
+    border-width: 2px;
+  }
 } 

@@ -18,6 +18,9 @@ const en = {
     save_as_template: "Save as template",
     template_saved: "Template saved!",
     rename: "Rename",
+    change_language: "Change language",
+    light_mode: "Light mode",
+    dark_mode: "Dark mode",
     delete_diagram: "Delete diagram",
     are_you_sure_delete_diagram:
       "Are you sure you want to delete this diagram? This operation is irreversible.",
@@ -318,7 +321,38 @@ const en = {
     
     // Display modes
     display_as_grid: "Grid view",
-    display_as_table: "Table view"
+    display_as_table: "Table view",
+    
+    // 筛选和分页相关翻译
+    filters: "Filters",
+    advanced_filters: "Advanced Filters",
+    reset: "Reset",
+    reset_filters: "Reset Filters",
+    clear_all_filters: "Clear All Filters",
+    select_database_type: "Select Database Type",
+    no_database_types: "No database types available",
+    create_time_range: "Creation Time Range",
+    update_time_range: "Update Time Range",
+    start_date: "Start Date",
+    end_date: "End Date",
+    locale_code: "en-US",
+    pagination: "Pagination",
+    items_per_page: "Items per page",
+    items_per_page_colon: "Items per page: ",
+    total_pages: "Total pages",
+    total_items: "Total items",
+    page: "Page",
+    no_matching_diagrams: "No diagrams match your search criteria",
+    search_diagram: "Search diagram by name",
+    display_as_grid: "Display as Grid",
+    display_as_table: "Display as Table",
+    diagram_has_no_tables: "This diagram has no tables",
+    pagination_showing: "Showing {{start}} to {{end}} of {{total}} diagrams",
+    pagination_showing_with_total: "Showing {{start}} to {{end}} of {{total}} diagrams",
+    database: "Database Type",
+    prev_page: "Previous",
+    next_page: "Next",
+    go_to_page: "Go to"
   },
 };
 

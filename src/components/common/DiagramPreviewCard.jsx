@@ -19,59 +19,10 @@ import TasksContextProvider from '../../context/TasksContext';
 import { ReadOnlyContextProvider } from '../../context/ReadOnlyContext';
 import './DiagramPreviewCard.css'; // 确保创建相应的CSS文件
 import { useTransform } from '../../hooks'; // 添加useTransform钩子导入
-
-/**
- * 计算合适的初始视图参数
- * @param {Object} diagram - 图表数据
- * @returns {Object} 包含zoom和pan属性的对象
- */
-const calculateInitialView = (diagram) => {
-  if (!diagram || !diagram.tables || diagram.tables.length === 0) {
-    return { zoom: 1, pan: { x: 0, y: 0 } };
-  }
-
-  try {
-    // 确保所有表格都有宽度和高度
-    const tablesWithDimensions = diagram.tables.map(table => ({
-      ...table,
-      width: table.width || 180,
-      height: table.height || (table.fields?.length * 30 + 40) || 100
-    }));
-
-    // 计算所有表格的边界点
-    const allPoints = tablesWithDimensions.flatMap(table => [
-      { x: table.x, y: table.y },
-      { x: table.x + table.width, y: table.y + table.height }
-    ]);
-
-    // 计算边界框
-    const minX = Math.min(...allPoints.map(p => p.x)) - 100;
-    const minY = Math.min(...allPoints.map(p => p.y)) - 100;
-    const maxX = Math.max(...allPoints.map(p => p.x)) + 100;
-    const maxY = Math.max(...allPoints.map(p => p.y)) + 100;
-
-    // 计算尺寸和中心点
-    const width = maxX - minX;
-    const height = maxY - minY;
-    const centerX = minX + width / 2;
-    const centerY = minY + height / 2;
-
-    // 计算合适的缩放比例
-    const containerWidth = 200; // 预览卡片宽度
-    const containerHeight = 200; // 预览卡片高度
-    const scaleX = containerWidth / width;
-    const scaleY = containerHeight / height;
-    const zoom = Math.min(scaleX, scaleY, 1) * 0.5; // 限制最大缩放为1，并设置为50%显示比例
-
-    return {
-      zoom: zoom,
-      pan: { x: centerX, y: centerY }
-    };
-  } catch (error) {
-    console.error('计算初始视图错误:', error);
-    return { zoom: 0.8, pan: { x: 0, y: 0 } };
-  }
-};
+import { formatDateTime } from '../../utils/utils';
+import { calculateInitialView } from '../../utils/viewUtils';
+import { normalizeDiagramData } from '../../utils/diagramUtils';
+import PreviewZoomController from './PreviewZoomController';
 
 /**
  * 创建一个示例表用于预览图表
@@ -141,64 +92,61 @@ const createSampleDiagram = (database, name) => {
 const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
+  const [canRenderPreview, setCanRenderPreview] = useState(false);
+  const loadingTimerRef = useRef(null);
+  const mountedRef = useRef(true);
   
   // 使用useMemo直接计算预处理后的图表数据，避免使用状态变量
-  const diagramData = useMemo(() => {
-    if (!diagram) return null;
-    
-    try {
-      // 确保tables和relationships都是数组
-      let tables = Array.isArray(diagram.tables) ? diagram.tables : [];
-      // 兼容旧版数据结构，references字段和relationships字段都可能存在
-      let relationships = Array.isArray(diagram.references) 
-        ? diagram.references 
-        : (Array.isArray(diagram.relationships) ? diagram.relationships : []);
-      
-      // 确保至少有一个表格才显示预览，否则创建示例表格
-      if (tables.length > 0) {
-        // 创建新对象，但不包含原始的zoom和pan属性
-        const { zoom, pan, ...diagramWithoutTransform } = diagram;
-        return { 
-          ...diagramWithoutTransform,
-          tables, 
-          references: relationships
-        };
-      } else {
-        console.log('图表没有表格数据，创建示例表:', diagram.id);
-        // 使用createSampleDiagram创建示例表格
-        const sampleDiagram = createSampleDiagram(diagram.database, diagram.name || '');
-        return {
-          ...diagram,
-          tables: sampleDiagram.tables,
-          references: sampleDiagram.relationships
-        };
-      }
-    } catch (error) {
-      console.error('解析图表数据失败', error);
-      // 出错时也创建示例表格
-      const sampleDiagram = createSampleDiagram('GENERIC', diagram.name || 'Unnamed');
-      return {
-        ...diagram,
-        tables: sampleDiagram.tables,
-        references: sampleDiagram.relationships
-      };
-    }
-  }, [diagram]);
+  const diagramData = useMemo(() => 
+    normalizeDiagramData(diagram), 
+  [diagram]);
 
   // 计算初始转换参数
-  const initialTransform = useMemo(() => {
-    return calculateInitialView(diagramData);
-  }, [diagramData]);
+  const initialTransform = useMemo(() => 
+    calculateInitialView(diagramData, {
+      containerWidth: 200,
+      containerHeight: 200,
+      zoomFactor: 0.5
+    }), 
+  [diagramData]);
+  
+  // 组件挂载/卸载生命周期管理
+  useEffect(() => {
+    mountedRef.current = true;
+    
+    // 延迟设置渲染预览状态，避免过早渲染导致问题
+    const previewTimer = setTimeout(() => {
+      if (mountedRef.current) {
+        setCanRenderPreview(true);
+      }
+    }, 100);
+    
+    return () => {
+      mountedRef.current = false;
+      clearTimeout(previewTimer);
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+      }
+    };
+  }, []);
   
   // 使用useEffect来处理加载状态变化
   useEffect(() => {
-    if (diagramData) {
-      const timer = setTimeout(() => {
-        setLoading(false);
-      }, 200);
-      return () => clearTimeout(timer);
+    if (diagramData && canRenderPreview) {
+      loadingTimerRef.current = setTimeout(() => {
+        if (mountedRef.current) {
+          setLoading(false);
+        }
+      }, 300);
     }
-  }, [diagramData]);
+    
+    return () => {
+      if (loadingTimerRef.current) {
+        clearTimeout(loadingTimerRef.current);
+        loadingTimerRef.current = null;
+      }
+    };
+  }, [diagramData, canRenderPreview]);
   
   // 使用useCallback优化按钮回调
   const handleView = useCallback(() => {
@@ -225,7 +173,7 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
     }
   }, [diagram, onDelete]);
 
-  // 获取数据库名称
+  // 获取数据库类型名称
   const dbName = useMemo(() => {
     if (diagram && diagram.database) {
       return databases[diagram.database]?.name || diagram.database || t('generic');
@@ -233,34 +181,15 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
     return t('generic');
   }, [diagram, t]);
 
-  const formatDateTime = (dateTime) => {
-    if (!dateTime) return '';
-  
-    try {
-      const date = new Date(dateTime);
-      if (isNaN(date.getTime())) return '';
-  
-      return new Intl.DateTimeFormat(navigator.language, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    } catch (error) {
-      console.error('日期格式化错误:', error);
-      return '';
-    }
-  };
-
   // 渲染Canvas预览
   const renderCanvasPreview = () => {
-    if (!diagramData) return null;
+    if (!diagramData || !canRenderPreview) return null;
+    
     return (
       <div className="interactive-preview-container">
         <LayoutContextProvider>
           <TransformContextProvider>
-            <PreviewZoomController zoom={0.3} pan={initialTransform.pan} />
+            <PreviewZoomController zoom={0.3} pan={initialTransform.pan} delay={100} />
             <UndoRedoContextProvider>
               <SelectContextProvider>
                 <TasksContextProvider>
@@ -380,26 +309,6 @@ const DiagramPreviewCard = ({ diagram, onEdit, onShare, onDelete, onView }) => {
       </div>
     </Card>
   );
-};
-
-// 创建一个内部组件来控制缩放
-const PreviewZoomController = ({ zoom, pan }) => {
-  const { setTransform } = useTransform();
-  
-  // 组件挂载后立即设置缩放值
-  useEffect(() => {
-    // 使用setTimeout确保在TransformContext完全初始化后执行
-    const timer = setTimeout(() => {
-      setTransform({
-        zoom: zoom,
-        pan: pan
-      });
-    }, 50);
-    
-    return () => clearTimeout(timer);
-  }, [zoom, pan, setTransform]);
-  
-  return null; // 这个组件不渲染任何内容
 };
 
 export default DiagramPreviewCard; 
