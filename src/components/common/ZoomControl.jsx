@@ -1,137 +1,115 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@douyinfe/semi-ui';
+import React, { useState, useEffect } from 'react';
+import { Button, Divider } from '@douyinfe/semi-ui';
 import { IconPlus, IconMinus } from '@douyinfe/semi-icons';
 import { useTranslation } from 'react-i18next';
+import { useTransform, useLayout } from '../../hooks';
+import { exitFullscreen } from '../../utils/fullscreen';
 
 /**
- * 缩放控制组件
- * 显示当前画布的缩放比例并提供缩放控制按钮
+ * 浮动控制栏组件，包含缩放控制和退出全屏功能
+ * 在全屏模式下显示在右下角
  * 
- * @param {Object} props - 组件属性
- * @param {Object} props.transform - 变换状态对象
- * @param {Function} props.setTransform - 设置变换状态的函数
- * @param {number} props.minZoom - 最小缩放比例，默认0.1
- * @param {number} props.maxZoom - 最大缩放比例，默认5
- * @param {number} props.zoomInFactor - 放大因子，默认1.25
- * @param {number} props.zoomOutFactor - 缩小因子，默认0.8
+ * @returns {JSX.Element} 浮动控制栏组件
  */
-const ZoomControl = ({ 
-  transform, 
-  setTransform,
-  minZoom = 0.1,
-  maxZoom = 5,
-  zoomInFactor = 1.25,
-  zoomOutFactor = 0.8
-}) => {
+const FloatingControls = () => {
+  const { transform, setTransform } = useTransform();
+  const { setLayout } = useLayout();
   const { t } = useTranslation();
-  const percentage = Math.round(transform.zoom * 100);
-  const [inputValue, setInputValue] = useState(percentage.toString());
+  const [inputValue, setInputValue] = useState(`${Math.round(transform.zoom * 100)}`);
 
-  // 当transform改变时更新输入值
+  // 当transform.zoom变化时更新输入值
   useEffect(() => {
-    setInputValue(percentage.toString());
-  }, [percentage]);
+    setInputValue(`${Math.round(transform.zoom * 100)}`);
+  }, [transform.zoom]);
 
-  // 放大画布
-  const handleZoomIn = (event) => {
-    event.stopPropagation();
+  // 放大
+  const handleZoomIn = () => {
     setTransform(prev => ({
       ...prev,
-      zoom: Math.min(prev.zoom * zoomInFactor, maxZoom)
+      zoom: prev.zoom * 1.2
     }));
   };
 
-  // 缩小画布
-  const handleZoomOut = (event) => {
-    event.stopPropagation();
+  // 缩小
+  const handleZoomOut = () => {
     setTransform(prev => ({
       ...prev,
-      zoom: Math.max(prev.zoom * zoomOutFactor, minZoom)
+      zoom: prev.zoom / 1.2
     }));
   };
 
-  // 处理输入变化
+  // 处理输入改变
   const handleInputChange = (e) => {
     setInputValue(e.target.value);
   };
 
-  // 处理输入确认
+  // 处理输入确认 (失去焦点或按下回车)
   const handleInputConfirm = (e) => {
-    // 阻止事件冒泡
-    e.stopPropagation();
-
-    // 如果按下的是回车键或者输入框失去焦点
-    if (e.type === 'blur' || (e.type === 'keydown' && e.key === 'Enter')) {
-      // 解析输入的百分比值
-      const newPercentage = parseInt(inputValue.replace(/[^0-9]/g, ''), 10);
-
-      // 检查是否有效数字
-      if (!isNaN(newPercentage) && newPercentage > 0) {
-        const newZoom = Math.min(Math.max(newPercentage / 100, minZoom), maxZoom);
+    if (e.type === 'blur' || e.key === 'Enter') {
+      const numValue = parseInt(inputValue, 10);
+      if (!isNaN(numValue) && numValue > 0) {
         setTransform(prev => ({
           ...prev,
-          zoom: newZoom
+          zoom: numValue / 100
         }));
       } else {
-        // 如果输入无效，恢复为当前缩放值
-        setInputValue(percentage.toString());
-      }
-
-      // 如果是按下回车，则失去焦点
-      if (e.type === 'keydown') {
-        e.target.blur();
+        // 如果输入无效，恢复为当前zoom值
+        setInputValue(`${Math.round(transform.zoom * 100)}`);
       }
     }
   };
 
+  // 退出全屏
+  const handleExitFullscreen = () => {
+    setLayout((prev) => ({
+      ...prev,
+      sidebar: true,
+      toolbar: true,
+      header: true,
+    }));
+    exitFullscreen();
+  };
+
   return (
-    <div className="zoom-control-container rounded-lg flex items-center" style={{ height: '40px' }}>
-      <Button
-        icon={<IconMinus />}
-        size="large"
-        onClick={handleZoomOut}
-        aria-label={t('zoom_out')}
-        className="zoom-button"
-      />
-      <div
-        style={{
-          margin: '0 8px',
-          padding: '0 4px',
-          display: 'flex',
-          alignItems: 'center'
-        }}
-      >
-        <input
-          type="text"
-          value={inputValue}
-          onChange={handleInputChange}
-          onBlur={handleInputConfirm}
-          onKeyDown={handleInputConfirm}
-          className="zoom-input text-color"
-          style={{
-            width: '50px',
-            textAlign: 'center',
-            background: 'transparent',
-            border: '1px solid transparent',
-            fontWeight: 'bold',
-            outline: 'none',
-            borderRadius: '4px',
-            padding: '4px'
-          }}
-          onFocus={(e) => e.target.select()}
-          onClick={(e) => e.stopPropagation()}
-        />
-        <span className="text-color" style={{ fontWeight: 'bold' }}>%</span>
+    <div className="floating-controls flex gap-2">
+      <div className="popover-theme flex rounded-lg items-center">
+        <button
+          className="px-3 py-2"
+          onClick={handleZoomOut}
+          aria-label={t('zoom_out')}
+        >
+          <IconMinus />
+        </button>
+        <Divider align="center" layout="vertical" />
+        <div className="px-3 py-2">
+          <input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            onBlur={handleInputConfirm}
+            onKeyDown={handleInputConfirm}
+            className="bg-transparent border-none w-[40px] text-center"
+            style={{ outline: 'none' }}
+          />%
+        </div>
+        <Divider align="center" layout="vertical" />
+        <button
+          className="px-3 py-2"
+          onClick={handleZoomIn}
+          aria-label={t('zoom_in')}
+        >
+          <IconPlus />
+        </button>
       </div>
-      <Button
-        icon={<IconPlus />}
-        size="large"
-        onClick={handleZoomIn}
-        aria-label={t('zoom_in')}
-        className="zoom-button"
-      />
+      <button
+        className="px-3 py-2 rounded-lg popover-theme"
+        onClick={handleExitFullscreen}
+        aria-label={t('exit')}
+      >
+        <i className="bi bi-fullscreen-exit" />
+      </button>
     </div>
   );
 };
 
-export default ZoomControl;
+export default FloatingControls;

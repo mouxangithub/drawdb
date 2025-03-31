@@ -12,6 +12,9 @@ import { dirname } from 'path';
 import fs from 'fs';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './swagger.js';
+import http from 'http'; // 添加http模块
+import { initWebSocketServer } from './services/websocketService.js'; // 导入WebSocket服务
+import os from 'os'; // 导入os模块用于获取网络接口
 
 // 获取当前文件的目录路径
 const __filename = fileURLToPath(import.meta.url);
@@ -29,6 +32,9 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 const app = express();
 const PORT = process.env.PORT || 3000;
 const apiBasePath = '/api';
+
+// 创建HTTP服务器
+const server = http.createServer(app);
 
 // 中间件
 app.use(cors({
@@ -294,18 +300,58 @@ async function startServer() {
     // 同步数据库模型
     await sequelize.sync();
 
+    // 初始化WebSocket服务
+    initWebSocketServer(server);
+
     // 启动服务器
-    app.listen(PORT, () => {
-      console.log(`服务器已启动，监听端口: ${PORT}`);      
+    server.listen(PORT, '0.0.0.0', () => {
+      // 获取IP地址
+      const getNetworkIPs = () => {
+        const networkInterfaces = os.networkInterfaces();
+        const results = [];
+        
+        for (const name of Object.keys(networkInterfaces)) {
+          for (const net of networkInterfaces[name]) {
+            // 跳过内部接口和非IPv4地址
+            if (net.family === 'IPv4' && !net.internal) {
+              results.push(net.address);
+            }
+          }
+        }
+        return results;
+      };
+      
+      const networkIPs = getNetworkIPs();
+      
+      console.log(`\n=== DrawDB 服务器已启动 ===`);
+      console.log(`- 本地地址: http://localhost:${PORT}`);
+      
+      if (networkIPs.length > 0) {
+        console.log('- 网络地址:');
+        networkIPs.forEach(ip => {
+          console.log(`  http://${ip}:${PORT}`);
+        });
+      }
+      
+      console.log(`\n=== WebSocket服务已启动 ===`);
+      console.log(`- 本地地址: ws://localhost:${PORT}/ws/diagrams`);
+      
+      if (networkIPs.length > 0) {
+        console.log('- 网络地址:');
+        networkIPs.forEach(ip => {
+          console.log(`  ws://${ip}:${PORT}/ws/diagrams`);
+        });
+      }
+      
       // 检查静态文件路径是否真的存在并包含index.html
       if (!fs.existsSync(staticFilesPath) || !fs.existsSync(path.join(staticFilesPath, 'index.html'))) {
-        console.warn('\x1b[33m%s\x1b[0m', '警告: 前端静态文件未找到!');
+        console.warn('\n\x1b[33m%s\x1b[0m', '警告: 前端静态文件未找到!');
         console.warn('\x1b[33m%s\x1b[0m', '请执行以下操作之一:');
         console.warn('\x1b[33m%s\x1b[0m', '1. 启动前端开发服务: 在前端项目目录中运行 npm run dev 或 yarn dev');
         console.warn('\x1b[33m%s\x1b[0m', '2. 构建前端项目: 运行 npm run build 或 yarn build');
         console.warn('\x1b[33m%s\x1b[0m', '前端开发服务默认地址通常为: http://localhost:5173');
       } else {
-        console.log(`前端静态文件路径: ${staticFilesPath}`);
+        console.log(`\n前端静态文件路径: ${staticFilesPath}`);
       }
     });
   } catch (error) {

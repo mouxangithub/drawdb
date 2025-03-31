@@ -194,12 +194,24 @@ export const diagramApi = {
    * 更新图表
    * @param {number} id - 图表ID
    * @param {Object} data - 图表数据
+   * @returns {Promise<Object>} 更新后的图表数据或冲突信息
    */
   update: async (id, data) => {
     try {
       const response = await api.put(`/diagrams/${id}`, data);
       return response.data;
     } catch (error) {
+      // 检查是否是版本冲突错误(HTTP 409 Conflict)
+      if (error.response && error.response.status === 409) {
+        console.warn('图表版本冲突:', error.response.data);
+        // 返回冲突信息，由调用方处理
+        return {
+          conflict: true,
+          message: error.response.data.message,
+          serverVersion: error.response.data.serverVersion,
+          yourVersion: error.response.data.yourVersion
+        };
+      }
       console.error(`更新图表 ${id} 失败:`, error);
       throw error;
     }

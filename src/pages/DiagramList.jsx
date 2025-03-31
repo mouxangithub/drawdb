@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef, useMemo } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   Button, 
@@ -7,13 +7,11 @@ import {
   Empty, 
   Card,
   Notification,
-  Tabs,
   Toast,
   Modal,
   Select,
   DatePicker,
   Popover,
-  Space,
   Tag,
   Pagination
 } from '@douyinfe/semi-ui';
@@ -26,8 +24,7 @@ import {
   IconShareStroked,
   IconDelete,
   IconFilter,
-  IconClose,
-  IconCalendar
+  IconClose
 } from '@douyinfe/semi-icons';
 import { diagramApi } from '../services/api';
 import { useTranslation } from 'react-i18next';
@@ -36,7 +33,7 @@ import DiagramPreviewCard from '../components/common/DiagramPreviewCard';
 import DiagramViewModal from '../components/common/DiagramViewModal';
 import ThemeLanguageSwitcher from '../components/common/ThemeLanguageSwitcher';
 import { formatDateTime } from '../utils/utils';
-import './DiagramList.css'; // 添加CSS导入
+import '../styles/pages/DiagramList.css'; // 添加CSS导入
 
 /**
  * 图表列表页面
@@ -73,6 +70,10 @@ export default function DiagramList() {
   // 使用ref避免在状态更新过程中获取过时的状态值
   const loadingRef = useRef(false);
   const searchTimeout = useRef(null);
+  
+  // 添加refs - 只保留Semi UI原生组件的refs
+  const paginationRef = useRef(null);
+  const popoverRef = useRef(null);
   
   // 加载图表列表 - 修改为使用筛选参数
   const fetchDiagrams = useCallback(async (page = currentPage, size = pageSize) => {
@@ -516,6 +517,7 @@ export default function DiagramList() {
               aria-label={t('search_diagram')}
             />
             <Popover
+              ref={popoverRef}
               content={filterContent}
               trigger="click"
               position="bottomLeft"
@@ -734,6 +736,7 @@ export default function DiagramList() {
             {total > 0 && (
               <div className="flex justify-center mt-6">
                 <Pagination
+                  ref={paginationRef}
                   total={total}
                   currentPage={currentPage}
                   pageSize={pageSize}
@@ -744,9 +747,6 @@ export default function DiagramList() {
                   aria-label={t('pagination')}
                   popoverProps={{ position: 'topRight' }}
                   style={{ marginTop: '16px' }}
-                  showTotal={(total, range) => 
-                    t('pagination_showing', { start: range[0], end: range[1], total: total })
-                  }
                 />
               </div>
             )}

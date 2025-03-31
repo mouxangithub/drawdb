@@ -1,7 +1,19 @@
-import { tableFieldHeight, tableHeaderHeight } from "../data/constants";
-import { calcPath } from "../utils/calcPath";
+import React from 'react';
+import { tableFieldHeight, tableHeaderHeight } from "../../data/constants";
+import { calcPath } from "../../utils/calcPath";
 
-export default function Thumbnail({ diagram, i, zoom, theme }) {
+/**
+ * 图表缩略图组件 - 用于模板选择界面
+ * 简化版的图表预览，静态显示图表结构
+ * 
+ * @param {Object} props - 组件属性
+ * @param {Object} props.diagram - 图表数据对象
+ * @param {number} props.i - 索引，用于生成唯一ID
+ * @param {number} props.zoom - 缩放比例
+ * @param {string} props.theme - 主题 ('light' 或 'dark')
+ * @returns {JSX.Element} 图表缩略图SVG
+ */
+export default function DiagramThumbnail({ diagram, i, zoom, theme }) {
   return (
     <svg
       className={`${
@@ -175,4 +187,4 @@ export default function Thumbnail({ diagram, i, zoom, theme }) {
       </g>
     </svg>
   );
-}
+} 

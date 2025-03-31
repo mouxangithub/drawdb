@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import {
   Action,
   Cardinality,
@@ -26,6 +26,37 @@ import {
 import { useTranslation } from "react-i18next";
 import { useEventListener } from "usehooks-ts";
 import { areFieldsCompatible } from "../../utils/utils";
+
+/**
+ * 节流函数 - 限制函数在指定时间内最多执行一次
+ * @param {Function} func 要执行的函数
+ * @param {number} limit 时间限制(ms)
+ * @returns {Function} 节流后的函数
+ */
+function throttle(func, limit) {
+  let inThrottle;
+  let lastFunc;
+  let lastRan;
+  
+  return function() {
+    const context = this;
+    const args = arguments;
+    
+    if (!inThrottle) {
+      func.apply(context, args);
+      lastRan = Date.now();
+      inThrottle = true;
+    } else {
+      clearTimeout(lastFunc);
+      lastFunc = setTimeout(function() {
+        if (Date.now() - lastRan >= limit) {
+          func.apply(context, args);
+          lastRan = Date.now();
+        }
+      }, limit - (Date.now() - lastRan));
+    }
+  };
+}
 
 export default function Canvas() {
   const { t } = useTranslation();
@@ -84,12 +115,27 @@ export default function Canvas() {
     pointerY: 0,
   });
 
-  /**
-   * @param {PointerEvent} e
-   * @param {*} id
-   * @param {ObjectType[keyof ObjectType]} type
-   */
-  const handlePointerDownOnElement = (e, id, type) => {
+  // 添加一个批处理更新的机制
+  const pendingUpdates = useRef({
+    table: null,
+    area: null,
+    note: null
+  });
+  
+  // 使用requestAnimationFrame进行视觉更新
+  const rafRef = useRef(null);
+
+  // 使用useMemo缓存计算结果，减少重复计算
+  const movableElements = useMemo(() => {
+    return {
+      tables: tables.map(t => ({ id: t.id, x: t.x, y: t.y })),
+      areas: areas.map(a => ({ id: a.id, x: a.x, y: a.y })),
+      notes: notes.map(n => ({ id: n.id, x: n.x, y: n.y }))
+    };
+  }, [tables, areas, notes]);
+
+  // 使用useCallback包装处理函数，避免不必要的重新渲染
+  const handlePointerDownOnElement = useCallback((e, id, type) => {
     if (selectedElement.open && !layout.sidebar) return;
     if (!e.isPrimary) return;
     
@@ -132,18 +178,151 @@ export default function Canvas() {
         prevY: note.y,
       });
     }
+    
+    // 更新选中元素状态
     setSelectedElement((prev) => ({
       ...prev,
       element: type,
       id: id,
       open: false,
     }));
-  };
+  }, [selectedElement, layout.sidebar, readOnly, tables, areas, notes, pointer.spaces.diagram, setSelectedElement]);
 
-  /**
-   * @param {PointerEvent} e
-   */
-  const handlePointerMove = (e) => {
+  // 使用节流优化元素移动的处理
+  const updateElementPosition = useCallback((element, id, x, y) => {
+    switch(element) {
+      case ObjectType.TABLE:
+        updateTable(id, { x, y });
+        break;
+      case ObjectType.AREA:
+        updateArea(id, { x, y });
+        break;
+      case ObjectType.NOTE:
+        updateNote(id, { x, y });
+        break;
+      default:
+        break;
+    }
+  }, [updateTable, updateArea, updateNote]);
+  
+  // 创建一个节流版本的更新函数
+  const throttledUpdatePosition = useCallback(
+    throttle(updateElementPosition, 16), // 约60fps
+    [updateElementPosition]
+  );
+
+  // 使用useEffect处理元素移动，避免在渲染期间更新状态
+  useEffect(() => {
+    if (dragging.element !== ObjectType.NONE && dragging.id >= 0 && !readOnly) {
+      const updatedX = pointer.spaces.diagram.x + grabOffset.x;
+      const updatedY = pointer.spaces.diagram.y + grabOffset.y;
+      
+      // 判断是否可以移动（如果是AREA且正在调整大小则不移动）
+      if (dragging.element === ObjectType.AREA && areaResize.id !== -1) {
+        return;
+      }
+      
+      // 使用requestAnimationFrame调度更新
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      
+      rafRef.current = requestAnimationFrame(() => {
+        throttledUpdatePosition(dragging.element, dragging.id, updatedX, updatedY);
+      });
+    }
+    
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [
+    dragging.element, 
+    dragging.id, 
+    pointer.spaces.diagram.x, 
+    pointer.spaces.diagram.y, 
+    grabOffset, 
+    areaResize.id, 
+    readOnly,
+    throttledUpdatePosition
+  ]);
+
+  // 创建一个节流版本的区域调整函数
+  const updateAreaSize = useCallback((id, dims) => {
+    updateArea(id, dims);
+  }, [updateArea]);
+  
+  const throttledUpdateAreaSize = useCallback(
+    throttle(updateAreaSize, 16),
+    [updateAreaSize]
+  );
+
+  // 处理区域调整的useEffect
+  useEffect(() => {
+    // 只在区域调整模式下处理
+    if (areaResize.id !== -1 && areaResize.dir !== "none" && !readOnly) {
+      let newDims = { ...initCoords };
+      delete newDims.pointerX;
+      delete newDims.pointerY;
+      
+      // 设置panning状态为false
+      setPanning(old => ({ ...old, isPanning: false }));
+      
+      // 根据拖拽方向计算新的尺寸
+      switch (areaResize.dir) {
+        case "br":
+          newDims.width = Math.max(50, pointer.spaces.diagram.x - initCoords.x);
+          newDims.height = Math.max(50, pointer.spaces.diagram.y - initCoords.y);
+          break;
+        case "tl":
+          newDims.x = pointer.spaces.diagram.x;
+          newDims.y = pointer.spaces.diagram.y;
+          newDims.width = Math.max(50, initCoords.x + initCoords.width - pointer.spaces.diagram.x);
+          newDims.height = Math.max(50, initCoords.y + initCoords.height - pointer.spaces.diagram.y);
+          break;
+        case "tr":
+          newDims.y = pointer.spaces.diagram.y;
+          newDims.width = Math.max(50, pointer.spaces.diagram.x - initCoords.x);
+          newDims.height = Math.max(50, initCoords.y + initCoords.height - pointer.spaces.diagram.y);
+          break;
+        case "bl":
+          newDims.x = pointer.spaces.diagram.x;
+          newDims.width = Math.max(50, initCoords.x + initCoords.width - pointer.spaces.diagram.x);
+          newDims.height = Math.max(50, pointer.spaces.diagram.y - initCoords.y);
+          break;
+        default:
+          return; // 不处理未知的拖拽方向
+      }
+      
+      // 使用requestAnimationFrame调度更新
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      
+      rafRef.current = requestAnimationFrame(() => {
+        throttledUpdateAreaSize(areaResize.id, newDims);
+      });
+    }
+    
+    return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+    };
+  }, [
+    areaResize.id,
+    areaResize.dir,
+    readOnly,
+    initCoords,
+    pointer.spaces.diagram.x,
+    pointer.spaces.diagram.y,
+    throttledUpdateAreaSize,
+    setPanning
+  ]);
+
+  // 修改handlePointerMove为节流函数
+  const handlePointerMoveRaw = useCallback((e) => {
     if (selectedElement.open && !layout.sidebar) return;
     if (!e.isPrimary) return;
 
@@ -163,6 +342,7 @@ export default function Canvas() {
       if (!settings.panning) {
         return;
       }
+      
       setTransform((prev) => ({
         ...prev,
         pan: {
@@ -174,70 +354,26 @@ export default function Canvas() {
             (panning.cursorStart.y - pointer.spaces.screen.y) / transform.zoom,
         },
       }));
-    } else if (dragging.element === ObjectType.TABLE && dragging.id >= 0) {
-      if (readOnly) return;
-      
-      updateTable(dragging.id, {
-        x: pointer.spaces.diagram.x + grabOffset.x,
-        y: pointer.spaces.diagram.y + grabOffset.y,
-      });
-    } else if (
-      dragging.element === ObjectType.AREA &&
-      dragging.id >= 0 &&
-      areaResize.id === -1
-    ) {
-      if (readOnly) return;
-      
-      updateArea(dragging.id, {
-        x: pointer.spaces.diagram.x + grabOffset.x,
-        y: pointer.spaces.diagram.y + grabOffset.y,
-      });
-    } else if (dragging.element === ObjectType.NOTE && dragging.id >= 0) {
-      if (readOnly) return;
-      
-      updateNote(dragging.id, {
-        x: pointer.spaces.diagram.x + grabOffset.x,
-        y: pointer.spaces.diagram.y + grabOffset.y,
-      });
-    } else if (areaResize.id !== -1) {
-      if (readOnly) return;
-      
-      if (areaResize.dir === "none") return;
-      let newDims = { ...initCoords };
-      delete newDims.pointerX;
-      delete newDims.pointerY;
-      setPanning((old) => ({ ...old, isPanning: false }));
-
-      switch (areaResize.dir) {
-        case "br":
-          newDims.width = pointer.spaces.diagram.x - initCoords.x;
-          newDims.height = pointer.spaces.diagram.y - initCoords.y;
-          break;
-        case "tl":
-          newDims.x = pointer.spaces.diagram.x;
-          newDims.y = pointer.spaces.diagram.y;
-          newDims.width =
-            initCoords.x + initCoords.width - pointer.spaces.diagram.x;
-          newDims.height =
-            initCoords.y + initCoords.height - pointer.spaces.diagram.y;
-          break;
-        case "tr":
-          newDims.y = pointer.spaces.diagram.y;
-          newDims.width = pointer.spaces.diagram.x - initCoords.x;
-          newDims.height =
-            initCoords.y + initCoords.height - pointer.spaces.diagram.y;
-          break;
-        case "bl":
-          newDims.x = pointer.spaces.diagram.x;
-          newDims.width =
-            initCoords.x + initCoords.width - pointer.spaces.diagram.x;
-          newDims.height = pointer.spaces.diagram.y - initCoords.y;
-          break;
-      }
-
-      updateArea(areaResize.id, { ...newDims });
     }
-  };
+  }, [
+    selectedElement.open,
+    layout.sidebar,
+    linking,
+    readOnly,
+    linkingLine,
+    panning,
+    dragging.element,
+    areaResize.id,
+    settings.panning,
+    transform.zoom,
+    pointer.spaces
+  ]);
+  
+  // 创建节流版本的指针移动处理函数
+  const handlePointerMove = useMemo(() => 
+    throttle(handlePointerMoveRaw, 16),
+    [handlePointerMoveRaw]
+  );
 
   /**
    * @param {PointerEvent} e

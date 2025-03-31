@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import {
   Tab,
   ObjectType,
@@ -43,10 +43,12 @@ export default function Table(props) {
     [settings.mode],
   );
 
-  const height =
-    tableData.fields.length * tableFieldHeight + tableHeaderHeight + 7;
+  const height = useMemo(() => 
+    tableData.fields.length * tableFieldHeight + tableHeaderHeight + 7,
+    [tableData.fields.length]
+  );
 
-  const openEditor = () => {
+  const openEditor = useCallback(() => {
     if (readOnly) return; // 只读模式下不能打开编辑器
     
     if (!layout.sidebar) {
@@ -64,12 +66,144 @@ export default function Table(props) {
         id: tableData.id,
         open: true,
       }));
-      if (selectedElement.currentTab !== Tab.TABLES) return;
-      document
-        .getElementById(`scroll_table_${tableData.id}`)
-        .scrollIntoView({ behavior: "smooth" });
     }
-  };
+  }, [readOnly, layout.sidebar, tableData.id, setSelectedElement]);
+
+  useEffect(() => {
+    if (selectedElement.element === ObjectType.TABLE && 
+        selectedElement.id === tableData.id && 
+        selectedElement.open && 
+        layout.sidebar && 
+        selectedElement.currentTab === Tab.TABLES) {
+      // 这里使用RAF替代setTimeout进行DOM操作
+      const scrollToElement = () => {
+        const element = document.getElementById(`scroll_table_${tableData.id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      };
+      
+      // 使用requestAnimationFrame，等待DOM更新后再滚动
+      const frameId = requestAnimationFrame(scrollToElement);
+      
+      // 清理函数
+      return () => cancelAnimationFrame(frameId);
+    }
+  }, [selectedElement, tableData.id, layout.sidebar]);
+
+  // 使用useCallback包装字段指针事件处理程序
+  const handleFieldPointerEnter = useCallback((index, e) => {
+    if (!e.isPrimary) return;
+    
+    setHoveredField(index);
+    
+    if (!readOnly) {
+      setHoveredTable({
+        tableId: tableData.id,
+        field: index,
+      });
+    }
+  }, [readOnly, tableData.id, setHoveredTable]);
+
+  const handleFieldPointerLeave = useCallback((e) => {
+    if (!e.isPrimary) return;
+    setHoveredField(-1);
+  }, []);
+
+  const handleFieldPointerDown = useCallback((index, e) => {
+    e.target.releasePointerCapture(e.pointerId);
+  }, []);
+
+  const handleGripFieldClick = useCallback((index, e) => {
+    if (!e.isPrimary) return;
+    if (readOnly) return;
+
+    handleGripField(index);
+    setLinkingLine((prev) => ({
+      ...prev,
+      startFieldId: index,
+      startTableId: tableData.id,
+      startX: tableData.x + 15,
+      startY: tableData.y + index * tableFieldHeight + tableHeaderHeight + tableColorStripHeight + 12,
+      endX: tableData.x + 15,
+      endY: tableData.y + index * tableFieldHeight + tableHeaderHeight + tableColorStripHeight + 12,
+    }));
+  }, [handleGripField, readOnly, setLinkingLine, tableData]);
+
+  // 使用memo缓存rendering字段列表
+  const renderedFields = useMemo(() => {
+    return tableData.fields.map((fieldData, index) => {
+      const isLastField = index === tableData.fields.length - 1;
+      const isHovered = hoveredField === index;
+      
+      return (
+        <div
+          key={index}
+          className={`${
+            isLastField ? "" : "border-b border-gray-400"
+          } group h-[36px] px-2 py-1 flex justify-between items-center gap-1 w-full overflow-hidden`}
+          onPointerEnter={(e) => handleFieldPointerEnter(index, e)}
+          onPointerLeave={handleFieldPointerLeave}
+          onPointerDown={handleFieldPointerDown}
+        >
+          <div
+            className={`${
+              isHovered ? "text-zinc-400" : ""
+            } flex items-center gap-2 overflow-hidden`}
+          >
+            {!readOnly && (
+              <button
+                className="shrink-0 w-[10px] h-[10px] bg-[#2f68adcc] rounded-full"
+                onPointerDown={(e) => handleGripFieldClick(index, e)}
+              />
+            )}
+            <span className="overflow-hidden text-ellipsis whitespace-nowrap">
+              {fieldData.name}
+            </span>
+          </div>
+          <div className="text-zinc-400">
+            {isHovered && !readOnly ? (
+              <Button
+                theme="solid"
+                size="small"
+                style={{
+                  backgroundColor: "#d42020b3",
+                }}
+                icon={<IconMinus />}
+                onClick={() => deleteField(fieldData, tableData.id)}
+              />
+            ) : settings.showDataTypes ? (
+              <div className="flex gap-1 items-center">
+                {fieldData.primary && <IconKeyStroked />}
+                {!fieldData.notNull && <span>?</span>}
+                <span>
+                  {fieldData.type +
+                    ((dbToTypes[database][fieldData.type].isSized ||
+                      dbToTypes[database][fieldData.type].hasPrecision) &&
+                    fieldData.size &&
+                    fieldData.size !== ""
+                      ? `(${fieldData.size})`
+                      : "")}
+                </span>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      );
+    });
+  }, [
+    tableData.fields, 
+    hoveredField, 
+    readOnly, 
+    settings.showDataTypes, 
+    database,
+    handleFieldPointerEnter,
+    handleFieldPointerLeave,
+    handleFieldPointerDown,
+    handleGripFieldClick,
+    deleteField,
+    tableData.id
+  ]);
 
   return (
     <>
@@ -266,72 +400,71 @@ export default function Table(props) {
               </div>
             )}
           </div>
-          {tableData.fields.map((e, i) => {
-            return settings.showFieldSummary ? (
-              <Popover
-                key={i}
-                content={
-                  <div className="popover-theme">
-                    <div
-                      className="flex justify-between items-center pb-2"
-                      style={{ direction: "ltr" }}
-                    >
-                      <p className="me-4 font-bold">{e.name}</p>
-                      <p className="ms-4">
-                        {e.type +
-                          ((dbToTypes[database][e.type].isSized ||
-                            dbToTypes[database][e.type].hasPrecision) &&
-                          e.size &&
-                          e.size !== ""
-                            ? "(" + e.size + ")"
-                            : "")}
+          {settings.showFieldSummary 
+            ? tableData.fields.map((e, i) => (
+                <Popover
+                  key={i}
+                  content={
+                    <div className="popover-theme">
+                      <div
+                        className="flex justify-between items-center pb-2"
+                        style={{ direction: "ltr" }}
+                      >
+                        <p className="me-4 font-bold">{e.name}</p>
+                        <p className="ms-4">
+                          {e.type +
+                            ((dbToTypes[database][e.type].isSized ||
+                              dbToTypes[database][e.type].hasPrecision) &&
+                            e.size &&
+                            e.size !== ""
+                              ? "(" + e.size + ")"
+                              : "")}
+                        </p>
+                      </div>
+                      <hr />
+                      {e.primary && (
+                        <Tag color="blue" className="me-2 my-2">
+                          {t("primary")}
+                        </Tag>
+                      )}
+                      {e.unique && (
+                        <Tag color="amber" className="me-2 my-2">
+                          {t("unique")}
+                        </Tag>
+                      )}
+                      {e.notNull && (
+                        <Tag color="purple" className="me-2 my-2">
+                          {t("not_null")}
+                        </Tag>
+                      )}
+                      {e.increment && (
+                        <Tag color="green" className="me-2 my-2">
+                          {t("autoincrement")}
+                        </Tag>
+                      )}
+                      <p>
+                        <strong>{t("default_value")}: </strong>
+                        {e.default === "" ? t("not_set") : e.default}
+                      </p>
+                      <p>
+                        <strong>{t("comment")}: </strong>
+                        {e.comment === "" ? t("not_set") : e.comment}
                       </p>
                     </div>
-                    <hr />
-                    {e.primary && (
-                      <Tag color="blue" className="me-2 my-2">
-                        {t("primary")}
-                      </Tag>
-                    )}
-                    {e.unique && (
-                      <Tag color="amber" className="me-2 my-2">
-                        {t("unique")}
-                      </Tag>
-                    )}
-                    {e.notNull && (
-                      <Tag color="purple" className="me-2 my-2">
-                        {t("not_null")}
-                      </Tag>
-                    )}
-                    {e.increment && (
-                      <Tag color="green" className="me-2 my-2">
-                        {t("autoincrement")}
-                      </Tag>
-                    )}
-                    <p>
-                      <strong>{t("default_value")}: </strong>
-                      {e.default === "" ? t("not_set") : e.default}
-                    </p>
-                    <p>
-                      <strong>{t("comment")}: </strong>
-                      {e.comment === "" ? t("not_set") : e.comment}
-                    </p>
-                  </div>
-                }
-                position="right"
-                showArrow
-                style={
-                  isRtl(i18n.language)
-                    ? { direction: "rtl" }
-                    : { direction: "ltr" }
-                }
-              >
-                {field(e, i)}
-              </Popover>
-            ) : (
-              field(e, i)
-            );
-          })}
+                  }
+                  position="right"
+                  showArrow
+                  style={
+                    isRtl(i18n.language)
+                      ? { direction: "rtl" }
+                      : { direction: "ltr" }
+                  }
+                >
+                  {renderedFields[i]}
+                </Popover>
+              ))
+            : renderedFields
+          }
         </div>
       </foreignObject>
       {!readOnly && (
@@ -359,104 +492,4 @@ export default function Table(props) {
       )}
     </>
   );
-
-  function field(fieldData, index) {
-    return (
-      <div
-        className={`${
-          index === tableData.fields.length - 1
-            ? ""
-            : "border-b border-gray-400"
-        } group h-[36px] px-2 py-1 flex justify-between items-center gap-1 w-full overflow-hidden`}
-        onPointerEnter={(e) => {
-          if (!e.isPrimary) return;
-          
-          if (readOnly) {
-            setHoveredField(index);
-            return;
-          }
-
-          setHoveredField(index);
-          setHoveredTable({
-            tableId: tableData.id,
-            field: index,
-          });
-        }}
-        onPointerLeave={(e) => {
-          if (!e.isPrimary) return;
-          setHoveredField(-1);
-        }}
-        onPointerDown={(e) => {
-          e.target.releasePointerCapture(e.pointerId);
-        }}
-      >
-        <div
-          className={`${
-            hoveredField === index ? "text-zinc-400" : ""
-          } flex items-center gap-2 overflow-hidden`}
-        >
-          {!readOnly && (
-            <button
-              className="shrink-0 w-[10px] h-[10px] bg-[#2f68adcc] rounded-full"
-              onPointerDown={(e) => {
-                if (!e.isPrimary) return;
-                if (readOnly) return;
-
-                handleGripField(index);
-                setLinkingLine((prev) => ({
-                  ...prev,
-                  startFieldId: index,
-                  startTableId: tableData.id,
-                  startX: tableData.x + 15,
-                  startY:
-                    tableData.y +
-                    index * tableFieldHeight +
-                    tableHeaderHeight +
-                    tableColorStripHeight +
-                    12,
-                  endX: tableData.x + 15,
-                  endY:
-                    tableData.y +
-                    index * tableFieldHeight +
-                    tableHeaderHeight +
-                    tableColorStripHeight +
-                    12,
-                }));
-              }}
-            />
-          )}
-          <span className="overflow-hidden text-ellipsis whitespace-nowrap">
-            {fieldData.name}
-          </span>
-        </div>
-        <div className="text-zinc-400">
-          {hoveredField === index && !readOnly ? (
-            <Button
-              theme="solid"
-              size="small"
-              style={{
-                backgroundColor: "#d42020b3",
-              }}
-              icon={<IconMinus />}
-              onClick={() => deleteField(fieldData, tableData.id)}
-            />
-          ) : settings.showDataTypes ? (
-            <div className="flex gap-1 items-center">
-              {fieldData.primary && <IconKeyStroked />}
-              {!fieldData.notNull && <span>?</span>}
-              <span>
-                {fieldData.type +
-                  ((dbToTypes[database][fieldData.type].isSized ||
-                    dbToTypes[database][fieldData.type].hasPrecision) &&
-                  fieldData.size &&
-                  fieldData.size !== ""
-                    ? `(${fieldData.size})`
-                    : "")}
-              </span>
-            </div>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
 }

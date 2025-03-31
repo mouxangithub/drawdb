@@ -10,34 +10,40 @@ import TypesContextProvider from "../context/TypesContext";
 import TasksContextProvider from "../context/TasksContext";
 import SaveStateContextProvider from "../context/SaveStateContext";
 import EnumsContextProvider from "../context/EnumsContext";
+import WebSocketContextProvider from "../context/WebSocketContext";
+import { CollaborationProvider } from "../context/CollaborationContext";
 import WorkSpace from "../components/Workspace";
 
 export default function Editor() {
   const { id } = useParams(); // 获取URL参数中的图表ID
   
   return (
-    <LayoutContextProvider>
-      <TransformContextProvider>
-        <UndoRedoContextProvider>
-          <SelectContextProvider>
-            <TasksContextProvider>
-              <AreasContextProvider>
-                <NotesContextProvider>
-                  <TypesContextProvider>
-                    <EnumsContextProvider>
-                      <TablesContextProvider>
-                        <SaveStateContextProvider>
-                          <WorkSpace diagramId={id} />
-                        </SaveStateContextProvider>
-                      </TablesContextProvider>
-                    </EnumsContextProvider>
-                  </TypesContextProvider>
-                </NotesContextProvider>
-              </AreasContextProvider>
-            </TasksContextProvider>
-          </SelectContextProvider>
-        </UndoRedoContextProvider>
-      </TransformContextProvider>
-    </LayoutContextProvider>
+    <WebSocketContextProvider>
+      <CollaborationProvider>
+        <LayoutContextProvider>
+          <TransformContextProvider>
+            <UndoRedoContextProvider>
+              <SelectContextProvider>
+                <TasksContextProvider>
+                  <AreasContextProvider>
+                    <NotesContextProvider>
+                      <TypesContextProvider>
+                        <EnumsContextProvider>
+                          <TablesContextProvider>
+                            <SaveStateContextProvider>
+                              <WorkSpace diagramId={id} />
+                            </SaveStateContextProvider>
+                          </TablesContextProvider>
+                        </EnumsContextProvider>
+                      </TypesContextProvider>
+                    </NotesContextProvider>
+                  </AreasContextProvider>
+                </TasksContextProvider>
+              </SelectContextProvider>
+            </UndoRedoContextProvider>
+          </TransformContextProvider>
+        </LayoutContextProvider>
+      </CollaborationProvider>
+    </WebSocketContextProvider>
   );
 }

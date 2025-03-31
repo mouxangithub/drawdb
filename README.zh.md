@@ -45,17 +45,41 @@ DrawDB是一个强大且用户友好的数据库实体关系(DBER)编辑器，�
 - **交互式预览卡片**：使用Canvas渲染的图表预览卡片，支持拖动、缩放和字段悬停查看
 - **高级筛选系统**：全面的筛选功能，支持按数据库类型、创建时间和修改时间筛选图表
 
-## ✨ 核心特性
+## ✨ 核心功能
 
-- **多图表管理**：创建和管理多个数据库图表，支持网格和表格两种视图模式
-- **交互式预览**：提供图表缩略图和全功能预览模式，支持拖动和缩放操作
-- **图表共享**：生成分享链接，与团队成员或客户分享数据库设计
-- **国际化支持**：支持多语言，包括英文和中文界面
+- **多图表管理**：创建和管理多个数据库图表，支持网格和表格视图模式
+- **交互式预览**：图表缩略图和功能齐全的预览模式，支持拖拽和缩放
+- **图表分享**：生成分享链接与团队成员或客户协作
+- **多人协同编辑**：支持多人同时编辑图表，内置版本冲突解决机制
+- **国际化**：支持多种语言界面，包括英文和中文
 - **高级筛选**：按名称、数据库类型、创建日期和修改日期筛选图表
-- **免费使用**：所有功能完全免费，无需注册账户
-- **增强预览卡片**：在列表视图中提供与编辑器一致的交互式预览体验
+- **免费使用**：所有功能完全免费，无需注册账号
 
-## 🚀 快速开始
+## 🔄 协作功能
+
+项目支持实时协作编辑功能，允许多个用户同时编辑同一个图表。主要特性包括：
+
+### 实时协作
+
+- **无需登录** - 使用设备唯一标识符（基于IP地址或客户端生成的唯一ID）自动识别用户
+- **实时光标** - 显示其他用户的光标位置
+- **编辑指示器** - 显示哪些组件正在被其他用户编辑
+- **版本冲突解决** - 自动处理多人同时编辑时的版本冲突
+
+### 协作组件
+
+- **协作状态栏** - 显示当前连接状态和在线用户数量
+- **用户列表** - 显示当前在线的所有用户
+- **编辑指示器** - 在组件上显示谁正在编辑
+- **远程光标** - 显示其他用户的光标位置
+
+### 使用方法
+
+1. 打开相同的图表进行编辑
+2. 点击"连接协作"按钮开始协作
+3. 开始编辑 - 所有操作都会实时同步到其他用户
+
+## 🔄 快速开始
 
 ### 使用Docker启动（推荐）
 
@@ -141,39 +165,63 @@ drawdb/
 ├─ src/                   # 前端源代码
 │  ├─ animations/         # 动画组件
 │  ├─ assets/             # 静态资源
-│  ├─ components/         # 可重用组件
+│  ├─ components/         # 可复用组件
 │  │  ├─ common/          # 通用UI组件
 │  │  │  ├─ DiagramPreviewCard/  # 交互式图表预览卡片
-│  │  │  ├─ DiagramViewModal/    # 图表全屏预览模态框
+│  │  │  ├─ DiagramViewModal/    # 图表详情预览模态框
 │  │  │  ├─ ShareModal/          # 图表分享模态框
+│  │  │  ├─ DiagramThumbnail.jsx # 图表缩略图组件
+│  │  │  ├─ ZoomControl.jsx      # 缩放控制组件
+│  │  │  ├─ ConfirmationPrompt.jsx  # 通用确认对话框组件
 │  │  │  └─ ThemeLanguageSwitcher/ # 主题和语言切换组件
+│  │  ├─ CollaborationStatus.jsx  # WebSocket连接状态组件
+│  │  ├─ CollaboratorsList.jsx    # 在线协作用户列表组件
+│  │  ├─ UserActivityIndicator.jsx # 用户活跃状态指示器组件
+│  │  ├─ WebSocketLoadingOverlay.jsx # WebSocket加载状态覆盖层
 │  │  ├─ EditorCanvas/    # 画布编辑器组件
 │  │  ├─ EditorHeader/    # 编辑器头部组件
-│  │  ├─ EditorSidePanel/ # 编辑器侧边面板组件
+│  │  ├─ EditorSidePanel/ # 编辑器侧边栏组件
 │  │  └─ LexicalEditor/   # 富文本编辑器组件
 │  ├─ context/            # React上下文
+│  │  ├─ WebSocketContext.jsx  # WebSocket连接上下文管理
+│  │  ├─ CollaborationContext.jsx  # 协作功能与用户活跃状态管理
+│  │  └─ ...              # 其他上下文组件
 │  ├─ data/               # 静态数据和常量
 │  ├─ hooks/              # 自定义React钩子
+│  │  ├─ useWebSocket.js  # WebSocket连接钩子
+│  │  ├─ useCollaboration.js  # 协作功能钩子
+│  │  ├─ useUserActivity.js  # 用户活跃状态监控钩子
+│  │  └─ ...              # 其他钩子函数
 │  ├─ i18n/               # 国际化配置
 │  ├─ icons/              # 图标组件
 │  ├─ pages/              # 页面组件
 │  ├─ services/           # API和服务
+│  │  ├─ websocket.js     # WebSocket客户端服务
+│  │  ├─ diagramWebSocketService.js  # 图表WebSocket服务
+│  │  └─ ...              # 其他服务
+│  ├─ styles/             # CSS样式文件
+│  │  ├─ components/      # 组件相关样式
+│  │  ├─ pages/           # 页面相关样式
+│  │  └─ global/          # 全局样式
 │  ├─ utils/              # 工具函数
-│  ├─ App.jsx             # 应用程序主组件
-│  └─ main.jsx            # 应用程序入口点
+│  ├─ App.jsx             # 主应用组件
+│  └─ main.jsx            # 应用入口点
 ├─ server/                # 后端服务器
 │  ├─ database/           # SQLite数据库文件
 │  └─ src/                # 服务器源代码
 ```
 
-## 📋 环境变量配置
+## 📋 环境变量
 
-项目使用`.env`文件统一配置前端和后端环境变量：
+项目使用`.env`文件配置前端和后端环境变量：
 
 ```bash
 # 服务器配置
-PORT=3001
+PORT=3000
 NODE_ENV=development
+
+# 前端配置
+VITE_WS_PORT=3000  # WebSocket实时协作端口
 
 # 数据库配置
 DB_STORAGE=server/database/drawdb.sqlite

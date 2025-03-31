@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState } from "react";
 import {
   IconCaretdown,
   IconChevronRight,
@@ -75,6 +75,7 @@ import { jsonToDocumentation } from "../../utils/exportAs/documentation";
 import { IdContext } from "../Workspace";
 import { socials } from "../../data/socials";
 import { toDBML } from "../../utils/exportAs/dbml";
+import CollaboratorsList from "../CollaboratorsList";
 
 export default function ControlPanel({
   diagramId,
@@ -1391,6 +1392,7 @@ export default function ControlPanel({
             {header()}
             {window.name.split(" ")[0] !== "t" && (
               <div className="flex items-center">
+                <CollaboratorsList />
                 <Button 
                   type="primary"
                   className="text-base mx-1 py-2"

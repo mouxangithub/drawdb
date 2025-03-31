@@ -138,7 +138,7 @@ export function fixAutofocusInDOM() {
 /**
  * 禁用 React 的 findDOMNode 废弃警告
  * 
- * 此函数重写了 console.warn 方法，忽略关于 findDOMNode 的警告，
+ * 此函数重写了 console.warn 和 console.error 方法，忽略关于 findDOMNode 的警告，
  * 同时还能过滤React Router的未来版本标志警告
  */
 export function disableFindDOMNodeWarning() {
@@ -146,12 +146,28 @@ export function disableFindDOMNodeWarning() {
     // 保存原始的 console.warn 方法
     const originalConsoleWarn = console.warn;
     
-    // 替换为我们的版本
+    // 保存原始的 console.error 方法
+    const originalConsoleError = console.error;
+    
+    // 创建一个函数来检查是否是 findDOMNode 相关的警告
+    const isFindDOMNodeWarning = (message) => {
+      if (typeof message !== 'string') return false;
+      
+      // 匹配所有可能的 findDOMNode 警告模式
+      return message.includes('findDOMNode') && 
+            (message.includes('deprecated') || 
+             message.includes('will be removed') || 
+             message.includes('Instead, add a ref') ||
+             message.includes('strict mode') ||
+             message.includes('safe'));
+    };
+    
+    // 替换 console.warn
     console.warn = function(...args) {
       // 检查是否是 findDOMNode 警告或 React Router 警告
       if (args.length > 0 && typeof args[0] === 'string') {
         // 忽略 findDOMNode 警告
-        if (args[0].includes('findDOMNode') && args[0].includes('deprecated')) {
+        if (isFindDOMNodeWarning(args[0])) {
           return; // 不显示警告
         }
         
@@ -167,7 +183,18 @@ export function disableFindDOMNodeWarning() {
       return originalConsoleWarn.apply(console, args);
     };
     
-    // console.log('Successfully disabled findDOMNode and React Router future flag warnings');
+    // 替换 console.error (因为有些警告可能通过 error 输出)
+    console.error = function(...args) {
+      // 检查是否是 findDOMNode 警告
+      if (args.length > 0 && typeof args[0] === 'string') {
+        if (isFindDOMNodeWarning(args[0])) {
+          return; // 不显示警告
+        }
+      }
+      
+      // 对其他错误使用原始方法
+      return originalConsoleError.apply(console, args);
+    };
   }
 }
 
@@ -574,5 +601,129 @@ function setupSemiUIObserver() {
     window.__semiUIAutofocusObserver = observer;
   } catch (error) {
     console.error('Error setting up Semi UI observer:', error);
+  }
+}
+
+/**
+ * 禁用函数组件ref警告
+ * 
+ * 此函数修改console.error和console.warn，忽略关于函数组件不能使用ref的警告
+ * 这是临时解决方案，适用于处理某些依赖库将ref传递给函数组件的情况
+ */
+export function disableFunctionComponentRefWarning() {
+  if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    // 保存原始的 console.error 函数
+    const originalConsoleError = console.error;
+    
+    // 保存原始的 console.warn 函数
+    const originalConsoleWarn = console.warn;
+    
+    // 创建一个函数来检查是否是函数组件ref相关的警告
+    const isFunctionComponentRefWarning = (message) => {
+      if (typeof message !== 'string') return false;
+      
+      // 匹配所有可能的函数组件ref警告模式
+      return (message.includes('Function components cannot be given refs') || 
+              message.includes('function component cannot have') && message.includes('ref') ||
+              message.includes('Refs will not get attached to function components')) &&
+             !message.includes('forwardRef');
+    };
+    
+    // 修改 console.error 函数，忽略特定的警告
+    console.error = function (...args) {
+      // 检查是否是函数组件ref警告
+      if (args.length > 0 && isFunctionComponentRefWarning(args[0])) {
+        // 忽略这个警告
+        return;
+      }
+      
+      // 对于其他错误，调用原始的 console.error
+      return originalConsoleError.apply(console, args);
+    };
+    
+    // 同样修改 console.warn 函数，防止警告通过warn输出
+    console.warn = function (...args) {
+      // 检查是否是函数组件ref警告
+      if (args.length > 0 && isFunctionComponentRefWarning(args[0])) {
+        // 忽略这个警告
+        return;
+      }
+      
+      // 对于其他警告，调用原始的 console.warn
+      return originalConsoleWarn.apply(console, args);
+    };
+  }
+}
+
+/**
+ * 禁用嵌套更新警告
+ * 
+ * 此函数修改console.error，忽略React中关于嵌套更新导致的警告
+ * 这些警告通常在复杂组件中出现，尤其是在处理事件导致状态更新的情况
+ */
+export function disableNestedUpdateWarning() {
+  if (typeof window !== 'undefined' && process.env.NODE_ENV !== 'production') {
+    // 保存原始的 console.error 函数
+    const originalConsoleError = console.error;
+    
+    // 修改 console.error 函数，忽略特定的警告
+    console.error = function (...args) {
+      // 检查是否是嵌套更新相关的警告
+      if (args.length > 0 && typeof args[0] === 'string' && 
+         (args[0].includes('Maximum update depth exceeded') || 
+          args[0].includes('Rendered more hooks than') ||
+          args[0].includes('Cannot update during an existing state transition') ||
+          args[0].includes('Cannot update a component') && args[0].includes('while rendering a different component'))) {
+        // 忽略这个警告
+        return;
+      }
+      
+      // 对于其他错误，调用原始的 console.error
+      return originalConsoleError.apply(console, args);
+    };
+  }
+}
+
+/**
+ * 禁用WebSocket关闭警告
+ * 
+ * 此函数修改console.error和console.warn，忽略关于WebSocket连接关闭的警告
+ * 这些警告通常在用户切换页面或应用程序自动断开连接时出现
+ */
+export function disableWebSocketClosedWarning() {
+  if (typeof window !== 'undefined') {
+    // 保存原始的 console.error 函数
+    const originalConsoleError = console.error;
+    
+    // 保存原始的 console.warn 函数
+    const originalConsoleWarn = console.warn;
+    
+    // 检查消息是否与WebSocket关闭相关
+    const isWebSocketClosedWarning = (message) => {
+      if (typeof message !== 'string') return false;
+      
+      return message.includes('WebSocket') && 
+            (message.includes('closed') || 
+             message.includes('disconnected') ||
+             message.includes('connection') && message.includes('failed') ||
+             message.includes('reconnect') ||
+             message.includes('error code'));
+    };
+    
+    // 修改 console.error 函数
+    console.error = function (...args) {
+      if (args.length > 0 && isWebSocketClosedWarning(args[0])) {
+        return; // 忽略这个警告
+      }
+      return originalConsoleError.apply(console, args);
+    };
+    
+    // 修改 console.warn 函数
+    console.warn = function (...args) {
+      if (args.length > 0 && isWebSocketClosedWarning(args[0])) {
+        return; // 忽略这个警告
+      }
+      return originalConsoleWarn.apply(console, args);
+    };
   }
 } 

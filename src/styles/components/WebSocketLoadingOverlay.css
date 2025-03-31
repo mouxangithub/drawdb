@@ -1,0 +1,156 @@
+.websocket-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loading-content {
+  background-color: var(--semi-color-bg-2);
+  border-radius: 8px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 400px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.status-icon {
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.message-container {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.loading-text {
+  font-size: 16px;
+  margin-bottom: 8px;
+}
+
+.error-text {
+  font-size: 16px;
+  color: var(--semi-color-danger);
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: center;
+}
+
+@keyframes blink {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.status-icon svg {
+  animation: blink 2s infinite ease-in-out;
+}
+
+.refresh-button,
+.reconnect-button {
+  margin-top: 16px;
+}
+
+.auth-error-icon,
+.connection-error-icon {
+  color: #f5222d;
+}
+
+/* 错误详情样式 */
+.error-details {
+  margin-top: 16px;
+  text-align: left;
+  width: 100%;
+  background-color: rgba(0, 0, 0, 0.03);
+  padding: 12px;
+  border-radius: 4px;
+  border-left: 3px solid #f5222d;
+}
+
+.error-details ul {
+  margin: 8px 0;
+  padding-left: 24px;
+}
+
+.error-details li {
+  margin-bottom: 4px;
+}
+
+.help-text {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+  display: block;
+}
+
+/* 暗黑模式适配 */
+[theme-mode="dark"] .loading-content {
+  background-color: #1c1c1c;
+  color: #e0e0e0;
+}
+
+[theme-mode="dark"] .loading-text {
+  color: #e0e0e0;
+}
+
+[theme-mode="dark"] .error-text {
+  color: #ff7875;
+}
+
+[theme-mode="dark"] .error-details {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-left-color: #ff7875;
+}
+
+[theme-mode="dark"] .help-text {
+  color: #aaa;
+}
+
+/* 深色主题适配 */
+:root[theme-mode="dark"] .loading-content {
+  background-color: var(--semi-color-bg-1);
+}
+
+/* 半透明处理 */
+.loading-content {
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 加载动画 */
+.websocket-loading-overlay .semi-spin {
+  transform: scale(1.2);
+}
+
+.websocket-loading-overlay .semi-spin .semi-icon-loading {
+  animation: spin 1s linear infinite;
+  color: var(--semi-color-primary);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 暗黑模式适配 */
+@media (prefers-color-scheme: dark) {
+  .error-text {
+    color: #ff7875;
+  }
+} 

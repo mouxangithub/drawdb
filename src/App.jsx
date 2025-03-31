@@ -7,6 +7,9 @@ import { useTranslation } from "react-i18next";
 import Editor from "./pages/Editor";
 import DiagramList from "./pages/DiagramList";
 import SettingsContextProvider from "./context/SettingsContext";
+import WebSocketContextProvider from "./context/WebSocketContext";
+import { AuthProvider } from "./context/AuthContext";
+import WebSocketLoadingOverlay from "./components/WebSocketLoadingOverlay";
 import { useSettings } from "./hooks";
 import NotFound from "./pages/NotFound";
 import { useFixAutofocusIssue } from "./utils/fixAutofocusIssue";
@@ -47,36 +50,41 @@ export default function App() {
   return (
     <LocaleProvider locale={locale}>
       <SettingsContextProvider>
-        <BrowserRouter>
-          <RestoreScroll />
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <ThemedPage>
-                  <DiagramList />
-                </ThemedPage>
-              }
-            />
-            <Route
-              path="/editor"
-              element={
-                <ThemedPage>
-                  <Editor />
-                </ThemedPage>
-              }
-            />
-            <Route
-              path="/editor/:id"
-              element={
-                <ThemedPage>
-                  <Editor />
-                </ThemedPage>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AuthProvider>
+          <WebSocketContextProvider>
+            <BrowserRouter>
+              <RestoreScroll />
+              <WebSocketLoadingOverlay />
+              <Routes>
+                <Route
+                  path="/"
+                  element={
+                    <ThemedPage>
+                      <DiagramList />
+                    </ThemedPage>
+                  }
+                />
+                <Route
+                  path="/editor"
+                  element={
+                    <ThemedPage>
+                      <Editor />
+                    </ThemedPage>
+                  }
+                />
+                <Route
+                  path="/editor/:id"
+                  element={
+                    <ThemedPage>
+                      <Editor />
+                    </ThemedPage>
+                  }
+                />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </WebSocketContextProvider>
+        </AuthProvider>
       </SettingsContextProvider>
     </LocaleProvider>
   );

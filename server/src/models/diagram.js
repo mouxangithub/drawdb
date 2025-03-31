@@ -82,6 +82,12 @@ export default (sequelize) => {
       type: DataTypes.INTEGER,
       allowNull: true, // 在实现用户认证后可改为false
     },
+    version: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      comment: '乐观锁版本号，用于处理并发编辑'
+    },
   });
 
   return Diagram;

@@ -1,0 +1,76 @@
+/* src/components/CollaborationStatus.css */
+.collaboration-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-left: 16px;
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.collaboration-container.connected {
+    background-color: rgba(0, 171, 85, 0.1);
+    border: 1px solid rgba(0, 171, 85, 0.2);
+}
+
+.collaboration-container.disconnected {
+    background-color: rgba(255, 77, 79, 0.1);
+    border: 1px solid rgba(255, 77, 79, 0.2);
+}
+
+.collaboration-container.loading {
+    background-color: rgba(80, 99, 204, 0.1);
+    border: 1px solid rgba(80, 99, 204, 0.2);
+}
+
+.users-container {
+    display: flex;
+    align-items: center;
+    margin-left: 8px;
+}
+
+.user-avatars {
+    display: flex;
+    margin-left: 4px;
+    flex-direction: row-reverse;
+}
+
+.user-avatar {
+    border: 2px solid var(--semi-color-bg-0);
+    margin-left: -8px;
+}
+
+.user-avatar:first-child {
+    margin-left: 0;
+}
+
+/* 深色主题适配 */
+:root[theme-mode="dark"] .collaboration-container.connected {
+    background-color: rgba(0, 171, 85, 0.15);
+    border-color: rgba(0, 171, 85, 0.3);
+}
+
+:root[theme-mode="dark"] .collaboration-container.disconnected {
+    background-color: rgba(255, 77, 79, 0.15);
+    border-color: rgba(255, 77, 79, 0.3);
+}
+
+:root[theme-mode="dark"] .collaboration-container.loading {
+    background-color: rgba(80, 99, 204, 0.15);
+    border-color: rgba(80, 99, 204, 0.3);
+}
+
+:root[theme-mode="dark"] .user-avatar {
+    border-color: var(--semi-color-bg-1);
+}
+
+/* 加载动画 */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.collaboration-container .semi-spin .semi-icon-loading {
+    animation: spin 1s linear infinite;
+    color: var(--semi-color-info);
+}

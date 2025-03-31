@@ -240,6 +240,33 @@ const zh = {
     view_diagram_list: "查看图形列表",
     diagram_saved: "图表已保存到图形列表",
     
+    // 版本冲突相关翻译
+    version_conflict_title: "图表版本冲突",
+    version_conflict_message: "当前图表已被其他用户修改。您可以重新加载最新版本，或强制保存您的更改。",
+    reload_current_version: "重新加载最新版本",
+    force_save: "强制保存我的更改",
+    
+    // WebSocket和协作功能翻译
+    connecting_to_collaboration: "正在连接到协作服务...",
+    connection_failed: "连接失败",
+    reconnecting: "尝试重新连接 ({{count}})...",
+    synchronizing_data: "正在同步数据...",
+    auth_failed: "认证失败，请刷新页面重试",
+    reconnect: "重新连接",
+    reset_auth_status: "重置认证状态",
+    refresh_page: "刷新页面",
+    collaborator: "协作用户",
+    realtime_collaboration: "实时协作中",
+    more_collaborators: "还有{{count}}位协作者",
+    user_joined: "{{username}}已加入协作",
+    user_left: "{{username}}已离开协作",
+    connection_error: "连接错误：{{message}}",
+    websocket_error: "WebSocket错误",
+    websocket_disconnected: "WebSocket连接已断开",
+    websocket_auth_error: "WebSocket认证错误",
+    operation_failed: "操作失败: {{error}}",
+    connection_timeout: "连接超时",
+    
     // Footer & Features 组件翻译
     all_rights_reserved: "版权所有",
     more_than_editor: "不止是编辑器",
@@ -315,8 +342,59 @@ const zh = {
     database: "数据库类型",
     prev_page: "上一页",
     next_page: "下一页",
-    go_to_page: "跳转到"
+    go_to_page: "跳转到",
+    
+    // 协同编辑相关翻译
+    collaboration_connected: "已连接到协同编辑",
+    collaboration_disconnected: "已断开协同编辑连接",
+    collaboration_user_joined: "用户 {{username}} 已加入",
+    collaboration_user_left: "用户 {{username}} 已离开",
+    collaboration_unknown_user: "未知用户",
+    collaboration_error: "协同编辑错误: {{message}}",
+    collaboration_error_title: "协同编辑错误",
+    online_users: "在线用户",
+    you: "你",
+    collaborators: "协作者",
+    no_collaborators: "暂无其他协作者",
+    collaboration_panel_title: "实时协作",
+    show_cursors: "显示其他用户光标",
+    your_name: "你的名称",
+    change_name: "修改名称",
+    collaborating_with: "正在与 {{count}} 人协作",
+    
+    // 新增协作功能翻译
+    collaboration_connect: "连接协作",
+    collaboration_disconnect: "断开协作",
+    collaboration_users: "用户",
+    collaboration_status_connected: "协作已连接",
+    collaboration_status_disconnected: "协作已断开",
+    collaboration_online_users: "在线用户 ({{count}})",
+    collaboration_no_users: "暂无在线用户",
+    collaboration_show_cursors: "显示用户光标",
+    collaboration_merge_operation: "需要合并操作",
+    collaboration_merge_operation_content: "用户 {{username}} 的操作需要合并",
+    
+    // 编辑指示器翻译
+    editing_indicator_tooltip: "{{username}} 正在编辑",
+    editing_indicator_time: "{{time}}",
+    collaborators_list_title: "在线用户 ({{count}})",
+    collaborators_list_empty: "暂无在线用户",
+    collaborators_list_you: "你",
+    collaborators_list_editing: "正在编辑",
+    collaborators_list_editing_component: "正在编辑 {{component}}",
+    
+    // 用户活跃状态相关
+    active_users: "活跃用户",
+    active: "活跃",
+    inactive: "不活跃",
+    unknown: "未知",
+    just_now: "刚刚",
+    minutes_ago: "{{minutes}}分钟前",
+    hours_ago: "{{hours}}小时前",
+    last_active: "最后活跃",
+    status: "状态",
   },
 };
 
-export { zh, chinese };
+export { chinese, zh };
+export default zh;

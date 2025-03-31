@@ -8,7 +8,7 @@ import {
   State,
   defaultBlue,
 } from "../../../data/constants";
-import ColorPalette from "../../ColorPicker";
+import ColorPicker from "../../ColorPicker";
 import { useTranslation } from "react-i18next";
 
 export default function AreaInfo({ data, i }) {
@@ -57,7 +57,7 @@ export default function AreaInfo({ data, i }) {
         <Popover
           content={
             <div className="popover-theme">
-              <ColorPalette
+              <ColorPicker
                 currentColor={data.color}
                 onClearColor={() => {
                   updateArea(i, { color: defaultBlue });

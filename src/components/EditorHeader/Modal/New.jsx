@@ -1,5 +1,5 @@
 import { useSettings } from "../../../hooks";
-import Thumbnail from "../../Thumbnail";
+import DiagramThumbnail from "../../common/DiagramThumbnail";
 import { useTranslation } from "react-i18next";
 
 export default function New({ selectedTemplateId, setSelectedTemplateId }) {
@@ -14,7 +14,7 @@ export default function New({ selectedTemplateId, setSelectedTemplateId }) {
             selectedTemplateId === 0 ? "border-blue-400" : "border-zinc-400"
           }`}
         >
-          <Thumbnail i={0} diagram={{}} zoom={0.24} theme={settings.mode} />
+          <DiagramThumbnail i={0} diagram={{}} zoom={0.24} theme={settings.mode} />
         </div>
         <div className="text-center mt-1">{t("blank")}</div>
       </div>

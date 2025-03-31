@@ -17,7 +17,7 @@ import {
   useAreas,
   useSaveState,
 } from "../../hooks";
-import ColorPalette from "../ColorPicker";
+import ColorPicker from "../ColorPicker";
 import { useTranslation } from "react-i18next";
 import { useHover } from "usehooks-ts";
 
@@ -237,7 +237,7 @@ function EditPopoverContent({ data }) {
         <Popover
           content={
             <div className="popover-theme">
-              <ColorPalette
+              <ColorPicker
                 currentColor={data.color}
                 onPickColor={(c) => {
                   setUndoStack((prev) => [

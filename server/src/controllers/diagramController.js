@@ -38,7 +38,14 @@ const getAllDiagrams = async (req, res) => {
 
     // 构建筛选条件
     const where = {};
-    const order = [[sortBy, sortOrder]];
+    
+    // 处理排序 - 确保排序字段存在
+    let orderField = sortBy;
+    // 如果排序字段是version但数据库中没有这个字段，使用lastModified作为默认排序
+    if (sortBy === 'version') {
+      orderField = 'lastModified';
+    }
+    const order = [[orderField, sortOrder]];
 
     // 根据名称筛选
     if (name) {
@@ -195,7 +202,8 @@ const updateDiagram = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-    
+    const clientVersion = updateData.version;
+
     // 设置更新时间
     updateData.lastModified = new Date();
     
@@ -205,6 +213,18 @@ const updateDiagram = async (req, res) => {
     if (!diagram) {
       return res.status(404).json({ message: '图表不存在' });
     }
+
+    // 乐观锁检查 - 版本不匹配，说明数据已被其他用户修改
+    if (clientVersion !== undefined && diagram.version !== clientVersion) {
+      return res.status(409).json({ 
+        message: '数据冲突：该图表已被其他用户修改',
+        serverVersion: diagram.version,
+        yourVersion: clientVersion
+      });
+    }
+    
+    // 增加版本号
+    updateData.version = (diagram.version || 0) + 1;
     
     // 更新图表
     await diagram.update(updateData);

@@ -20,7 +20,9 @@
     "sequelize": "^6.37.1",
     "sqlite3": "^5.1.7",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
+    "swagger-ui-express": "^5.0.0",
+    "ws": "^8.15.1",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "eslint": "^8.55.0",

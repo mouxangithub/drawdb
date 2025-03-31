@@ -10,7 +10,7 @@ import {
 import { IconDeleteStroked } from "@douyinfe/semi-icons";
 import { useDiagram, useUndoRedo } from "../../../hooks";
 import { Action, ObjectType, defaultBlue } from "../../../data/constants";
-import ColorPalette from "../../ColorPicker";
+import ColorPicker from "../../ColorPicker";
 import TableField from "./TableField";
 import IndexDetails from "./IndexDetails";
 import { useTranslation } from "react-i18next";
@@ -227,7 +227,7 @@ export default function TableInfo({ data }) {
           <Popover
             content={
               <div className="popover-theme">
-                <ColorPalette
+                <ColorPicker
                   currentColor={data.color}
                   onClearColor={() => {
                     setUndoStack((prev) => [

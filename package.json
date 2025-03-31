@@ -52,8 +52,10 @@
     "react-i18next": "^14.1.1",
     "react-router-dom": "^6.21.0",
     "react-tweet": "^3.2.1",
+    "styled-components": "^6.1.16",
     "url": "^0.11.1",
-    "usehooks-ts": "^3.1.0"
+    "usehooks-ts": "^3.1.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.14",

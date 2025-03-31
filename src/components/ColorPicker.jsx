@@ -3,7 +3,16 @@ import { IconCheckboxTick } from "@douyinfe/semi-icons";
 import { tableThemes } from "../data/constants";
 import { useTranslation } from "react-i18next";
 
-export default function ColorPalette({
+/**
+ * 颜色选择器组件
+ * 提供一系列预设颜色供用户选择
+ * 
+ * @param {Object} props - 组件属性
+ * @param {string} props.currentColor - 当前选中的颜色
+ * @param {Function} props.onClearColor - 清除颜色的回调函数
+ * @param {Function} props.onPickColor - 选择颜色的回调函数
+ */
+export default function ColorPicker({
   currentColor,
   onClearColor,
   onPickColor,

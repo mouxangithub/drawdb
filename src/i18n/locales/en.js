@@ -199,8 +199,10 @@ const en = {
       "'{{fieldName}}' field of type '{{typeName}}' is of type `{{type}}` but no values have been specified",
     duplicate_type_fields:
       "Duplicate type fields by name '{{fieldName}}' in type '{{typeName}}'",
-    duplicate_reference: "Duplicate reference by the name '{{refName}}'",
-    circular_dependency: "Circular dependency involving table '{{refName}}'",
+    duplicate_reference:
+      "Reference {{tableA}}.{{fieldA}} -> {{tableB}}.{{fieldB}} is already in use",
+    circular_dependency:
+      "Circular dependency detected via reference {{tableA}}.{{fieldA}} -> {{tableB}}.{{fieldB}}",
     timeline: "Timeline",
     priority: "Priority",
     none: "None",
@@ -236,9 +238,9 @@ const en = {
     add_enum: "Add enum",
     edit_enum: "{{extra}} Edit enum {{enumName}}",
     delete_enum: "Delete enum",
-    enum_w_no_name: "Found enum with no name",
-    enum_w_no_values: "Found enum '{{enumName}}' with no values",
-    duplicate_enums: "Duplicate enums with the name '{{enumName}}'",
+    enum_w_no_name: "Declared an enum with no name",
+    enum_w_no_values: "Declared an empty enum '{{enumName}}' with no values",
+    duplicate_enums: "Duplicate enums by the name '{{enumName}}'",
     no_enums: "No enums",
     no_enums_text: "Define enums here",
     declare_array: "Declare array",
@@ -261,9 +263,15 @@ const en = {
     type_description: "Type description",
     add_attr: "Add attribute",
     add_method: "Add method",
-    save_to_diagram_list: "Save to Diagram List",
+    save_to_diagram_list: "Save to diagram list",
     view_diagram_list: "View Diagram List",
-    diagram_saved: "Diagram saved to Diagram List",
+    diagram_saved: "Diagram saved to diagram list",
+    
+    // Version conflict translations
+    version_conflict_title: "Diagram Version Conflict",
+    version_conflict_message: "This diagram has been modified by another user. You can reload the latest version or force save your changes.",
+    reload_current_version: "Reload Latest Version",
+    force_save: "Force Save My Changes",
     
     // Footer & Features 组件翻译
     all_rights_reserved: "All rights reserved",
@@ -352,7 +360,81 @@ const en = {
     database: "Database Type",
     prev_page: "Previous",
     next_page: "Next",
-    go_to_page: "Go to"
+    go_to_page: "Go to",
+    
+    // Collaboration translations
+    collaboration_connected: "Connected to collaboration",
+    collaboration_disconnected: "Disconnected from collaboration",
+    collaboration_user_joined: "User {username} joined",
+    collaboration_user_left: "User {username} left",
+    collaboration_unknown_user: "Unknown user",
+    collaboration_error: "Collaboration error: {message}",
+    online_users: "Online Users",
+    you: "You",
+    collaborators: "Collaborators",
+    no_collaborators: "No other collaborators",
+    collaboration_panel_title: "Real-time Collaboration",
+    show_cursors: "Show other users' cursors",
+    your_name: "Your Name",
+    change_name: "Change Name",
+    collaborating_with: "Collaborating with {count} others",
+    
+    // 协作功能相关翻译
+    collaboration: {
+      connected: "Connected",
+      connecting: "Connecting...",
+      disconnected: "Disconnected",
+      online: "users online",
+      start: "Start Collaboration",
+      stop: "Stop Collaboration",
+      collaborators: "Collaborators",
+      statusLabel: "Collaboration",
+      yourCursor: "Your cursor",
+      syncing: "Syncing...",
+      saved: "Saved via WebSocket",
+      error: "Connection Error",
+      reconnecting: "Reconnecting...",
+      userJoined: "{{username}} joined",
+      userLeft: "{{username}} left",
+      connectionLost: "Connection lost, trying to reconnect...",
+      connectionRestored: "Connection restored"
+    },
+    
+    grid_view: "Grid view",
+    table_view: "Table view",
+    name_required: "Name is required",
+    
+    // WebSocket and collaboration related translations
+    connecting_to_collaboration: "Connecting to collaboration service...",
+    connection_failed: "Connection failed",
+    reconnecting: "Attempting to reconnect ({{count}})...",
+    synchronizing_data: "Synchronizing data...",
+    auth_failed: "Authentication failed, please refresh the page to retry",
+    reconnect: "Reconnect",
+    reset_auth_status: "Reset Authentication Status",
+    refresh_page: "Refresh Page",
+    collaborator: "Collaborator",
+    realtime_collaboration: "Real-time collaboration",
+    more_collaborators: "{{count}} more collaborators",
+    user_joined: "{{username}} joined collaboration",
+    user_left: "{{username}} left collaboration",
+    connection_error: "Connection error: {{message}}",
+    websocket_error: "WebSocket error",
+    websocket_disconnected: "WebSocket disconnected",
+    websocket_auth_error: "WebSocket authentication error",
+    operation_failed: "Operation failed: {{error}}",
+    connection_timeout: "Connection timeout",
+    
+    // 用户活跃状态相关
+    active_users: "Active Users",
+    active: "Active",
+    inactive: "Inactive",
+    unknown: "Unknown",
+    just_now: "Just now",
+    minutes_ago: "{{minutes}} minutes ago",
+    hours_ago: "{{hours}} hours ago",
+    last_active: "Last active",
+    status: "Status"
   },
 };
 
