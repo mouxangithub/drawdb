@@ -101,28 +101,45 @@ app.use(`${apiBasePath}/diagrams`, diagramRoutes);
 
 // 获取静态文件路径
 function getStaticFilesPath() {
+  console.log('尝试确定静态文件路径...');
+  
   // 检查环境变量中配置的静态文件目录
   if (process.env.STATIC_FILES_DIR) {
     const envPath = path.resolve(process.env.STATIC_FILES_DIR);
+    console.log(`检查环境变量指定的路径: ${envPath}`);
     if (fs.existsSync(envPath)) {
+      console.log(`使用环境变量指定的静态文件路径: ${envPath}`);
       return envPath;
     }
   }
 
+  // 优先检查Docker构建中使用的server/public目录
+  const publicPath = path.resolve(__dirname, '../public');
+  console.log(`检查Docker构建路径: ${publicPath}`);
+  if (fs.existsSync(publicPath) && fs.existsSync(path.join(publicPath, 'index.html'))) {
+    console.log(`使用Docker构建的静态文件路径: ${publicPath}`);
+    return publicPath;
+  }
+
   // 检查其他可能的路径
-  // 注意：dist目录通常不会存在于Git仓库中，因为它已被添加到.gitignore
-  // 它会在构建过程中生成，并在Docker构建时复制到server/public目录
   const possiblePaths = [
+    path.resolve(process.cwd(), 'public'),
+    path.resolve(__dirname, '../public'),
     path.resolve(process.cwd(), 'dist'),
     path.resolve(__dirname, '../../../dist'),
     path.resolve(__dirname, '../../dist')
   ];
 
+  console.log('检查其他可能的静态文件路径:');
   for (const p of possiblePaths) {
+    console.log(`- 检查路径: ${p}`);
     if (fs.existsSync(p) && fs.existsSync(path.join(p, 'index.html'))) {
+      console.log(`找到可用的静态文件路径: ${p}`);
       return p;
     }
   }
+  
+  console.log('警告: 未找到有效的静态文件路径，使用默认路径');
   return path.resolve(process.cwd(), 'dist');
 }
 

@@ -244,8 +244,13 @@ cp server/database/drawdb.sqlite backups/drawdb_$(date +%Y%m%d_%H%M%S).sqlite
 
 If you encounter issues, please check:
 
-1. **Static files not accessible**: Ensure that the `STATIC_FILES_DIR` environment variable is set correctly
-2. **Docker container won't start**: Check if the ports are already in use or if directory permissions are correct
+1. **静态文件不可访问**: 确保以下几点:
+   - 检查 `STATIC_FILES_DIR` 环境变量是否正确设置
+   - 检查 Docker 容器中 `/app/server/public` 目录是否存在并包含静态文件
+   - 如果使用自定义 Docker 构建，确保 `npm run build` 成功执行并将构建结果正确复制到 `/app/server/public`
+   - 运行 `docker exec -it drawdb sh` 进入容器并检查 `/app/server/public` 目录
+
+2. **Docker 容器无法启动**: 检查端口是否已被占用或目录权限是否正确
 3. **WebSocket协作错误修复**:
    - 修复了`Workspace.jsx`中重复定义的`handleCollaborationOperation`函数，重命名为`handleCollaborationEvent`
    - 修复了拖动操作时`diagramData`变量未定义的问题
