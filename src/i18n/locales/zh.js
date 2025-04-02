@@ -431,6 +431,7 @@ const zh = {
     no_permission_to_access: "没有权限访问该图表",
     server_error: "服务器错误，请稍后重试",
     network_error: "网络连接错误，请检查网络设置",
+    no_saved_diagrams: "没有保存的图表",
   },
 };
 

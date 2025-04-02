@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useState, useCallback } from "react";
 import {
   IconCaretdown,
   IconChevronRight,
@@ -23,6 +23,9 @@ import {
   Tag,
   Toast,
   Popconfirm,
+  Modal as SemiModal,
+  Input,
+  Typography,
 } from "@douyinfe/semi-ui";
 import { toPng, toJpeg, toSvg } from "html-to-image";
 import {
@@ -48,6 +51,7 @@ import { useHotkeys } from "react-hotkeys-hook";
 import { Validator } from "jsonschema";
 import { areaSchema, noteSchema, tableSchema } from "../../data/schemas";
 import { db } from "../../data/db";
+import { diagramApi } from "../../services/api";
 import {
   useLayout,
   useSettings,
@@ -96,6 +100,12 @@ export default function ControlPanel({
     extension: "",
   });
   const [importFrom, setImportFrom] = useState(IMPORT_FROM.JSON);
+  
+  // 添加数据库选择模态框状态
+  const [showDbSelectModal, setShowDbSelectModal] = useState(false);
+  const [selectedDb, setSelectedDb] = useState('');
+  const [diagramName, setDiagramName] = useState('');
+  
   const { saveState, setSaveState } = useSaveState();
   const { layout, setLayout } = useLayout();
   const { settings, setSettings } = useSettings();
@@ -113,6 +123,7 @@ export default function ControlPanel({
     deleteRelationship,
     updateRelationship,
     database,
+    setDatabase,
   } = useDiagram();
   const { enums, setEnums, deleteEnum, addEnum, updateEnum } = useEnums();
   const { types, addType, deleteType, updateType, setTypes } = useTypes();
@@ -722,10 +733,115 @@ export default function ControlPanel({
   const saveDiagramAs = () => setModal(MODAL.SAVEAS);
   const fullscreen = useFullscreen();
 
+  // 添加处理数据库选择的函数
+  const handleDbSelect = useCallback((dbLabel) => {
+    setSelectedDb(dbLabel);
+    // 如果用户还没有输入名称，则生成默认名称
+    if (!diagramName) {
+      const dbName = Object.values(databases).find(x => x.label === dbLabel)?.name || 'Database';
+      setDiagramName(`${dbName} Diagram ${new Date().toLocaleDateString()}`);
+    }
+  }, [diagramName]);
+
+  // 创建并导航到新图表
+  const handleCreateAndNavigate = useCallback(async () => {
+    if (!selectedDb) return;
+    
+    try {
+      // 准备图表数据
+      const diagramData = {
+        name: diagramName || 'Untitled Diagram',
+        database: selectedDb,
+        lastModified: new Date(),
+        tables: [],
+        references: [],
+        notes: [],
+        areas: []
+      };
+      
+      // 创建新图表
+      const newDiagram = await diagramApi.create(diagramData);
+      
+      // 关闭模态框
+      setShowDbSelectModal(false);
+      
+      // 方法1：使用页面刷新方式导航
+      // 这将确保完全重新加载编辑器组件和图表数据
+      window.location.href = `/editor/${newDiagram.id}`;
+      
+      // 方法2(备用)：如果希望不刷新页面，仅重新加载图表数据
+      // 可以先保存当前图表，然后再导航
+      // save();
+      // setTimeout(() => {
+      //   navigate(`/editor/${newDiagram.id}`);
+      //   // 重新加载图表数据
+      //   loadDiagram(newDiagram.id);
+      // }, 100);
+    } catch (error) {
+      console.error('创建图表失败:', error);
+      Toast.error({
+        content: t('create_diagram_failed'),
+        duration: 3
+      });
+    }
+  }, [navigate, selectedDb, diagramName, t]);
+
+  // 打开数据库选择对话框
+  const openDbSelectDialog = useCallback(() => {
+    setSelectedDb('');
+    setDiagramName('');
+    setShowDbSelectModal(true);
+  }, []);
+  
+  // 加载图表数据
+  const loadDiagram = useCallback(async (id) => {
+    try {
+      const diagram = await diagramApi.getById(id);
+      if (diagram) {
+        // 设置图表数据
+        setDiagramId(id);
+        setTitle(diagram.name);
+        setTables(diagram.tables || []);
+        setRelationships(diagram.references || []);
+        setAreas(diagram.areas || []);
+        setNotes(diagram.notes || []);
+        setTransform({
+          pan: diagram.pan || { x: 0, y: 0 },
+          zoom: diagram.zoom || 1,
+        });
+        setUndoStack([]);
+        setRedoStack([]);
+        
+        // 设置类型和枚举（如果数据库支持）
+        if (databases[diagram.database]?.hasTypes) {
+          setTypes(diagram.types || []);
+        }
+        if (databases[diagram.database]?.hasEnums) {
+          setEnums(diagram.enums || []);
+        }
+        
+        // 更新浏览器窗口名称
+        window.name = `d ${id}`;
+        
+        // 更新数据库类型
+        setDatabase(diagram.database || DB.GENERIC);
+      } else {
+        Toast.error(t("diagram_not_found"));
+      }
+    } catch (error) {
+      console.error('获取图表失败:', error);
+      Toast.error({
+        content: t('get_diagram_failed'),
+        duration: 3
+      });
+    }
+  }, [setDiagramId, setTitle, setTables, setRelationships, setAreas, setNotes, 
+      setTransform, setUndoStack, setRedoStack, setTypes, setEnums, setDatabase, t, databases]);
+
   const menu = {
     file: {
       new: {
-        function: () => setModal(MODAL.NEW),
+        function: openDbSelectDialog,
       },
       // new_window: {
         // function: () => {
@@ -733,10 +849,10 @@ export default function ControlPanel({
           // newWindow.name = window.name;
         // },
       // },
-      open: {
-        function: open,
-        shortcut: "Ctrl+O",
-      },
+      // open: {
+        // function: open,
+        // shortcut: "Ctrl+O",
+      // },
       save: {
         function: save,
         shortcut: "Ctrl+S",
@@ -770,8 +886,23 @@ export default function ControlPanel({
               setUndoStack([]);
               setRedoStack([]);
               setGistId("");
+              
+              // 显示成功消息
+              Toast.success({
+                content: t("diagram_deleted"),
+                duration: 3,
+              });
+              
+              // 导航到图表列表首页
+              navigate("/");
             })
-            .catch(() => Toast.error(t("oops_smth_went_wrong")));
+            .catch((error) => {
+              console.error("删除图表失败:", error);
+              Toast.error({
+                content: t("delete_diagram_failed"),
+                duration: 3,
+              });
+            });
         },
       },
       import_from: {
@@ -1483,6 +1614,66 @@ export default function ControlPanel({
         type={sidesheet}
         onClose={() => setSidesheet(SIDESHEET.NONE)}
       />
+      
+      {/* 添加数据库选择对话框 */}
+      <SemiModal
+        centered
+        size="medium"
+        closable={true}
+        hasCancel={true}
+        title={t("pick_db")}
+        okText={t("confirm")}
+        visible={showDbSelectModal}
+        onOk={handleCreateAndNavigate}
+        onCancel={() => setShowDbSelectModal(false)}
+        okButtonProps={{ 
+          disabled: selectedDb === "",
+          loading: false
+        }}
+      >
+        <div className="space-y-4">
+          {/* 添加图表名称输入框 */}
+          <div>
+            <Typography.Text className="text-color mb-2 block">
+              {t('diagram_name')}
+            </Typography.Text>
+            <Input
+              value={diagramName}
+              onChange={setDiagramName}
+              placeholder={t('enter_diagram_name')}
+              className="w-full"
+            />
+          </div>
+          
+          {/* 数据库选择网格 */}
+          <div className="grid grid-cols-3 gap-4 place-content-center">
+            {Object.values(databases).map((x) => (
+              <div
+                key={x.name}
+                onClick={() => handleDbSelect(x.label)}
+                className={`space-y-3 py-3 px-4 rounded-md border-2 select-none cursor-pointer ${
+                  document.body.getAttribute('theme-mode') === "dark"
+                    ? "bg-zinc-700 hover:bg-zinc-600"
+                    : "bg-zinc-100 hover:bg-zinc-200"
+                } ${selectedDb === x.label ? "border-zinc-400" : "border-transparent"}`}
+              >
+                <div className="font-semibold">{x.name}</div>
+                {x.image && (
+                  <img
+                    src={x.image}
+                    className="h-10"
+                    style={{
+                      filter:
+                        "opacity(0.4) drop-shadow(0 0 0 white) drop-shadow(0 0 0 white)",
+                    }}
+                  />
+                )}
+                <div className="text-xs">{x.description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </SemiModal>
     </>
   );
 

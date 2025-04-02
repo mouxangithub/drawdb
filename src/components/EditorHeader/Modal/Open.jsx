@@ -1,5 +1,5 @@
 import { db } from "../../../data/db";
-import { Banner } from "@douyinfe/semi-ui";
+import { Banner, Spin } from "@douyinfe/semi-ui";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useTranslation } from "react-i18next";
 import { databases } from "../../../data/databases";
@@ -19,16 +19,27 @@ export default function Open({ selectedDiagramId, setSelectedDiagramId }) {
 
     return sizeStr;
   };
+  
+  if (diagrams === undefined) {
+    return (
+      <div className="flex justify-center items-center py-8">
+        <Spin size="large" />
+      </div>
+    );
+  }
+  
+  const diagramsArray = Array.isArray(diagrams) ? diagrams : [];
+  
   return (
     <div>
-      {diagrams?.length === 0 ? (
+      {diagramsArray.length === 0 ? (
         <Banner
           fullMode={false}
           type="info"
           bordered
           icon={null}
           closeIcon={null}
-          description={<div>You have no saved diagrams.</div>}
+          description={<div>{t("no_saved_diagrams")}</div>}
         />
       ) : (
         <div className="max-h-[360px]">
@@ -42,7 +53,7 @@ export default function Open({ selectedDiagramId, setSelectedDiagramId }) {
               </tr>
             </thead>
             <tbody>
-              {diagrams?.map((d) => {
+              {diagramsArray.map((d) => {
                 return (
                   <tr
                     key={d.id}
@@ -66,7 +77,9 @@ export default function Open({ selectedDiagramId, setSelectedDiagramId }) {
                     </td>
                     <td className="py-1">{getDiagramSize(d)}</td>
                     <td className="py-1">
-                      {databases[d.database].name ?? "Generic"}
+                      {d.database && databases[d.database] 
+                        ? databases[d.database].name 
+                        : "Generic"}
                     </td>
                   </tr>
                 );
