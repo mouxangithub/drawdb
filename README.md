@@ -25,48 +25,48 @@
 
 ## 📝 Project Introduction
 
-DrawDB is a free, in-browser database entity relationship (DBER) editor that simplifies database schema design and SQL generation. It allows users to create and manage database diagrams with ease, export SQL scripts, and customize the editor to their preferences, all without requiring account registration.
+DrawDB is a powerful and user-friendly database entity relationship (DBER) editor that runs directly in your browser. Build database diagrams with a few clicks, export SQL scripts, customize your editor, and more without creating an account.
 
-This project is a fork of [drawdb-io/drawdb](https://github.com/drawdb-io/drawdb), enhanced with a backend server, SQLite database integration, and a range of new features to improve usability and functionality.
+This project is based on [drawdb-io/drawdb](https://github.com/drawdb-io/drawdb) with enhancements including a backend server, SQLite database integration, and more features.
 
-> **Development Note**: This project was developed with AI assistance, utilizing the [Cursor](https://cursor.sh/) editor for code generation and refinement. AI played a key role in rewriting and enhancing the original codebase, particularly in adding backend server integration and extended features.
+> **Development Note**: This project was developed with the assistance of AI, using the [Cursor](https://cursor.sh/) editor for code generation and adaptation. The AI helped rewrite and enhance the original codebase, adding the backend server integration and other extended features.
 
-## 📋 Key Features
+## 📋 What's Added
 
-Compared to the original project, this enhanced version of drawDB includes:
+Compared to the original project, this fork adds several key features:
 
-- **Backend Server**: Provides persistent data storage and management capabilities.
-- **SQLite Database**: Integrates SQLite for efficient diagram storage and retrieval.
-- **Multi-Diagram Support**: Enables users to create, manage, and organize multiple database diagrams.
-- **Internationalization (i18n)**: Supports multiple languages, including English and Chinese, for a broader user base.
-- **Docker Deployment**: Offers Docker support for streamlined deployment and environment consistency.
-- **Automated Backups**: Includes built-in database backup functionality to safeguard user data.
-- **Enhanced Preview**: Features an interactive diagram preview with zoom and pan for detailed inspection.
-- **Optimized User Interface**: Refined UI with a bottom-centered control panel and floating information panel for improved user experience.
-- **Creation Time Display**: Shows diagram creation times in both grid and table views for better organization.
-- **Advanced Filtering**: Allows filtering diagrams by database type, creation time, and update time for efficient searching.
-- **Real-time Collaboration**: Supports WebSocket-based real-time collaborative editing, including user presence indicators, cursor tracking, and conflict resolution.
-- **Collaboration Controls**: UI components display online collaborators, connection status, and collaborative actions for better team coordination.
-- **Offline Recovery**: Implements a pending operations queue to recover from temporary disconnections, ensuring data integrity.
-- **User Identity Management**: Maintains consistent user identification across sessions with color-coded avatars for enhanced user recognition.
+- **Full Backend Server**: Added a server component for persistent data storage
+- **SQLite Database**: Integrated SQLite for diagram storage and management
+- **Multi-Diagram Management**: Support for creating and managing multiple diagrams
+- **Internationalization**: Added support for multiple languages (English/Chinese)
+- **Docker Deployment**: Complete Docker support for easy deployment
+- **Automated Backups**: Built-in database backup functionality
+- **Enhanced Preview**: Interactive diagram preview with zoom and pan capabilities
+- **Optimized UI**: Refined user interface with control panel centered at bottom and floating info panel
+- **Creation Time Display**: Added creation time display in both grid and table view modes
+- **Advanced Filtering System**: Comprehensive filtering by database type, creation time, and update time
+- **Real-time Collaboration**: WebSocket-based collaborative editing with user presence indicators, cursor tracking, and conflict resolution
+- **Collaboration Controls**: User interface components showing online collaborators, connection status, and collaborative actions
+- **Offline Recovery**: Pending operations queue for recovering from temporary disconnections
+- **User Identity Management**: Consistent user identification across sessions with color-coded avatars
 
-## ✨ Core Functionality
+## ✨ Core Features
 
-- **Multi-Diagram Management**: Organize and manage numerous database diagrams in grid and table view modes.
-- **Interactive Diagram Preview**: Preview diagrams with thumbnails and a full-featured preview mode supporting drag and zoom.
-- **Diagram Sharing**: Generate shareable links for collaboration with team members and clients.
-- **Collaborative Editing**: Enable concurrent editing with conflict resolution for team-based projects.
-- **Real-time Presence**: See who is viewing and editing diagrams with user avatars and status indicators.
-- **User Activity Detection**: Automatically manage inactive users in collaborative sessions to optimize performance.
-- **Operation Synchronization**: Instantly synchronize all changes between connected users for seamless collaboration.
-- **Internationalization**: Use drawDB in your preferred language with support for English and Chinese interfaces.
-- **Advanced Filtering**: Filter diagrams by name, database type, creation date, and modification date to quickly find specific diagrams.
-- **JSON Editor**: Edit table, relationship, subject area, and note properties in real-time using a JSON editor.
-- **Free Access**: Enjoy all features completely free, without any account registration required.
+- **Multi-Diagram Management**: Create and manage multiple database diagrams with grid and table view modes
+- **Interactive Preview**: Diagram thumbnails and full-featured preview mode with drag and zoom capabilities
+- **Diagram Sharing**: Generate sharing links to collaborate with team members or clients
+- **Collaborative Editing**: Support for concurrent diagram editing with version conflict resolution
+- **Real-time Presence**: See who's currently viewing and editing the diagram with user avatars and status indicators
+- **User Activity Detection**: Automatically detect and manage inactive users in collaborative sessions
+- **Operation Synchronization**: All changes are instantly synchronized between all connected users
+- **Internationalization**: Support for multiple languages, including English and Chinese interfaces
+- **Advanced Filtering**: Filter diagrams by name, database type, creation date, and modification date
+- **JSON Editor**: Real-time JSON editing for tables, relationships, subject areas, and notes
+- **Free to Use**: All features completely free, no account registration required
 
 ## 🚀 Quick Start
 
-### Docker Deployment (Recommended)
+### Using Docker (Recommended)
 
 ```bash
 # Pull the latest image
@@ -98,11 +98,11 @@ services:
       - ./backups:/app/backups
 ```
 
-### Startup Scripts
+### Using Startup Scripts
 
 #### Windows
 ```bat
-# Run locally (without Docker, starts both frontend and backend)
+# Run locally (without Docker, start both frontend and backend)
 start.bat local
 
 # Start development environment (using Docker)
@@ -114,10 +114,10 @@ start.bat prod
 
 #### Linux/macOS
 ```bash
-# Add execute permission
+# Add execution permission
 chmod +x start.sh
 
-# Run locally (without Docker, starts both frontend and backend)
+# Run locally (without Docker, start both frontend and backend)
 ./start.sh local
 
 # Start development environment (using Docker)
@@ -143,7 +143,62 @@ npm start
 
 ## 🏗️ Project Structure
 
-The project is structured into frontend and backend components to ensure scalability and maintainability.
+The project is divided into frontend and backend parts:
+
+```
+drawdb/
+├─ src/                   # Frontend source code
+│  ├─ animations/         # Animation components
+│  ├─ assets/             # Static resources
+│  ├─ components/         # Reusable components
+│  │  ├─ common/          # Common UI components
+│  │  │  ├─ DiagramPreviewCard/  # Interactive diagram preview cards
+│  │  │  ├─ DiagramViewModal/    # Full diagram preview modal
+│  │  │  ├─ ShareModal/          # Diagram sharing modal
+│  │  │  ├─ DiagramThumbnail.jsx # Diagram thumbnail component
+│  │  │  ├─ ZoomControl.jsx      # Zoom control component
+│  │  │  ├─ ConfirmationPrompt.jsx  # Confirmation dialog component
+│  │  │  └─ ThemeLanguageSwitcher/ # Theme and language switcher component
+│  │  ├─ CollaborationStatus.jsx  # WebSocket connection status component
+│  │  ├─ CollaboratorsList.jsx    # Online collaborators list component
+│  │  ├─ UserActivityIndicator.jsx # User activity indicator component
+│  │  ├─ WebSocketLoadingOverlay.jsx # WebSocket loading overlay
+│  │  ├─ EditorCanvas/    # Canvas editor components
+│  │  ├─ EditorHeader/    # Editor header components
+│  │  ├─ EditorSidePanel/ # Editor side panel components
+│  │  ├─ JsonEditor/      # JSON editor component
+│  │  └─ LexicalEditor/   # Rich text editor components
+│  ├─ context/            # React contexts
+│  │  ├─ WebSocketContext.jsx  # WebSocket connection context management
+│  │  ├─ CollaborationContext.jsx  # Collaboration features and user activity management
+│  │  └─ ...              # Other context components
+│  ├─ data/               # Static data and constants
+│  ├─ hooks/              # Custom React hooks
+│  │  ├─ useWebSocket.js  # WebSocket connection hook
+│  │  ├─ useCollaboration.js  # Collaboration feature hook
+│  │  ├─ useUserActivity.js  # User activity monitoring hook
+│  │  ├─ useJsonEditor.js  # JSON editor state hook
+│  │  └─ ...              # Other hooks
+│  ├─ i18n/               # Internationalization configuration
+│  ├─ icons/              # Icon components
+│  ├─ pages/              # Page components
+│  ├─ services/           # APIs and services
+│  │  ├─ websocket.js     # WebSocket client service
+│  │  ├─ diagramWebSocketService.js  # Diagram WebSocket service
+│  │  └─ ...              # Other services
+│  ├─ styles/             # CSS styles
+│  │  ├─ components/      # Component styles
+│  │  ├─ pages/           # Page styles
+│  │  └─ global/          # Global styles
+│  ├─ utils/              # Utility functions
+│  ├─ App.jsx             # Main application component
+│  └─ main.jsx            # Application entry point
+├─ server/                # Backend server
+│  ├─ database/           # SQLite database files
+│  └─ src/                # Server source code
+│     ├─ websocket/       # WebSocket server implementation
+│     └─ ...              # Other server code
+```
 
 ## 📋 Environment Variables
 
@@ -178,18 +233,18 @@ cp server/database/drawdb.sqlite backups/drawdb_$(date +%Y%m%d_%H%M%S).sqlite
 
 If you encounter issues, please check:
 
-1. **静态文件不可访问**: 确保以下几点:
-   - 检查 `STATIC_FILES_DIR` 环境变量是否正确设置
-   - 检查 Docker 容器中 `/app/server/public` 目录是否存在并包含静态文件
-   - 如果使用自定义 Docker 构建，确保 `npm run build` 成功执行并将构建结果正确复制到 `/app/server/public`
-   - 运行 `docker exec -it drawdb sh` 进入容器并检查 `/app/server/public` 目录
+1. **Static files not accessible**: Ensure the following:
+   - Check if the `STATIC_FILES_DIR` environment variable is set correctly
+   - Check if the `/app/server/public` directory exists and contains static files in the Docker container
+   - If using a custom Docker build, ensure `npm run build` has been executed successfully and the build results are copied to `/app/server/public`
+   - Run `docker exec -it drawdb sh` to enter the container and check the `/app/server/public` directory
 
-2. **Docker 容器无法启动**: 检查端口是否已被占用或目录权限是否正确
-3. **WebSocket协作错误修复**:
-   - 修复了`Workspace.jsx`中重复定义的`handleCollaborationOperation`函数，重命名为`handleCollaborationEvent`
-   - 修复了拖动操作时`diagramData`变量未定义的问题
-   - 优化了WebSocket消息处理逻辑，确保兼容不同格式的事件数据
-   - 加强了错误处理和数据验证，提高系统稳定性
+2. **Docker container won't start**: Check if the port is already in use or if directory permissions are correct
+3. **WebSocket collaboration error fixes**:
+   - Fixed the `handleCollaborationOperation` function defined multiple times in `Workspace.jsx`, renamed to `handleCollaborationEvent`
+   - Fixed the issue where `diagramData` variable was undefined during drag operations
+   - Optimized WebSocket message handling logic to ensure compatibility with different formats of event data
+   - Strengthened error handling and data validation to improve system stability
 
 ## 🤝 Contributing
 
@@ -208,102 +263,29 @@ This project is released under the [AGPL-3.0 License](LICENSE), the same license
 - Changes made to the code must be documented
 - If you run a modified program on a server and let users communicate with it, you must also provide them with the source code
 
-## 🔄 协作功能
+## 🔄 Collaboration Features
 
-项目支持实时协作编辑功能，允许多个用户同时编辑同一个图表。主要特性包括：
+The project supports real-time collaborative editing, allowing multiple users to edit the same diagram simultaneously. Key features include:
 
-### 实时协作
+### Real-time Collaboration
 
-- **无需登录** - 使用设备唯一标识符（基于IP地址或客户端生成的唯一ID）自动识别用户
-- **实时光标** - 显示其他用户的光标位置
-- **编辑指示器** - 显示哪些组件正在被其他用户编辑
-- **版本冲突解决** - 自动处理多人同时编辑时的版本冲突
+- **No login required** - Automatically identify users using a unique device identifier (based on IP address or a client-generated unique ID)
+- **Real-time cursors** - Display the cursor position of other users
+- **Editing indicators** - Show which components are being edited by other users
+- **Version conflict resolution** - Automatically handle version conflicts when multiple users edit simultaneously
 
-### 协作组件
+### Collaboration Components
 
-- **协作状态栏** - 显示当前连接状态和在线用户数量
-- **用户列表** - 显示当前在线的所有用户
-- **编辑指示器** - 在组件上显示谁正在编辑
-- **远程光标** - 显示其他用户的光标位置
+- **Collaboration status bar** - Displays the current connection status and the number of online users
+- **User list** - Shows all currently online users
+- **Editing indicators** - Display who is currently editing on components
+- **Remote cursors** - Show the cursor position of other users
 
-### 技术实现
+### Technical Implementation
 
-- 使用`ws`库实现WebSocket服务
-- 使用Sequelize操作SQLite数据库
-- 客户端使用浏览器原生WebSocket API
-
-## 项目结构
-
-前端结构：
-- `public/`: 静态资源
-- `src/`: 源代码
-  - `components/`: 组件
-    - `EditorCanvas/`: 编辑器画布相关组件
-    - `EditorHeader/`: 编辑器头部控制面板组件
-    - `EditorSidePanel/`: 编辑器侧边面板组件
-    - `LexicalEditor/`: 富文本编辑器组件
-    - `JsonEditor/`: JSON编辑器组件
-  - `context/`: React Context
-    - `AuthContext.jsx`: 认证上下文
-    - `CanvasContext.jsx`: 画布上下文
-    - `DiagramContext.jsx`: 图表数据上下文
-    - `WebSocketContext.jsx`: WebSocket连接上下文
-    - `CollaborationContext.jsx`: 协作功能上下文
-    - `JsonEditorContext.jsx`: JSON编辑器状态管理
-  - `services/`: 服务
-    - `api.js`: HTTP API服务
-    - `authService.js`: 认证服务
-    - `diagramWebSocketService.js`: 图表WebSocket服务
-    - `websocketManager.js`: WebSocket连接管理器
-    - `customEventBridge.js`: 自定义事件桥
-  - `pages/`: 页面组件
-  - `data/`: 数据和常量定义
-  - `hooks/`: 自定义Hooks
-  - `utils/`: 工具函数
-  - `i18n/`: 国际化
-
-后端结构：
-- `server/`: 服务器代码
-  - `controllers/`: 控制器
-  - `middleware/`: 中间件
-  - `routes/`: 路由
-  - `services/`: 服务层
-  - `utils/`: 工具函数
-  - `models/`: 数据模型
-  - `config/`: 配置文件
-  - `websocket/`: WebSocket处理
-  - `app.js`: 应用入口
-  - `server.js`: 服务器启动
-- `database/`: 数据库相关
-  - `migrations/`: 数据库迁移
-  - `seeds/`: 数据库种子数据
-  - `schema.sql`: 数据库架构
-
-## 最近更新
-
-### WebSocket连接管理优化
-
-为解决WebSocket频繁连接和断开的问题，我们对WebSocket连接管理进行了全面重构：
-
-1. **集中式连接管理**：
-   - 新增`websocketManager.js`作为全局WebSocket连接管理器
-   - 统一管理连接建立、消息发送、状态监听和错误处理
-   - 实现连接状态共享，避免重复连接尝试
-
-2. **关键优化内容**：
-   - 实现连接请求去重，避免短时间内重复建立连接
-   - 添加指数退避的重连机制，提高连接稳定性
-   - 引入心跳机制确保长连接稳定
-   - 优化认证失败的处理逻辑
-   - 完善连接异常恢复机制
-
-3. **组件协作改进**：
-   - 重构`WebSocketContext`，使用新的连接管理器
-   - 更新`diagramWebSocketService`，优化API调用方式
-   - 改进`Workspace`组件的WebSocket交互，避免重复连接
-   - 增强`CollaborationProvider`的稳定性和性能
-
-这些优化显著减少了WebSocket连接频率，提高了实时协作的稳定性和用户体验。
+- Implemented WebSocket service using the `ws` library
+- Used Sequelize to operate the SQLite database
+- The client uses the native WebSocket API in the browser
 
 ---
 
