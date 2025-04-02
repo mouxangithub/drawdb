@@ -37,6 +37,7 @@ export default function Table(props) {
   const { settings } = useSettings();
   const { t } = useTranslation();
   const { selectedElement, setSelectedElement } = useSelect();
+  const [isConnectingField, setIsConnectingField] = useState(false);
 
   const borderColor = useMemo(
     () => (settings.mode === "light" ? "border-zinc-300" : "border-zinc-600"),
@@ -118,6 +119,13 @@ export default function Table(props) {
     if (!e.isPrimary) return;
     if (readOnly) return;
 
+    // 阻止事件冒泡，防止在拖动字段时也拖动整个表格
+    e.stopPropagation();
+    
+    // 设置连接字段状态为true
+    setIsConnectingField(true);
+    
+    // 通知Canvas组件开始连接字段
     handleGripField(index);
     setLinkingLine((prev) => ({
       ...prev,
@@ -128,7 +136,33 @@ export default function Table(props) {
       endX: tableData.x + 15,
       endY: tableData.y + index * tableFieldHeight + tableHeaderHeight + tableColorStripHeight + 12,
     }));
-  }, [handleGripField, readOnly, setLinkingLine, tableData]);
+  }, [handleGripField, readOnly, setLinkingLine, tableData, setIsConnectingField]);
+
+  // 处理表格的指针按下事件，确保不会与字段连接器冲突
+  const handleTablePointerDown = useCallback((e) => {
+    // 如果正在连接字段，则不触发表格拖动
+    if (isConnectingField) {
+      e.stopPropagation();
+      return;
+    }
+    
+    // 否则调用原始的onPointerDown进行表格拖动
+    onPointerDown(e);
+  }, [onPointerDown, isConnectingField]);
+
+  // 在连接完成后重置状态
+  useEffect(() => {
+    // 监听指针抬起事件，重置连接字段状态
+    const handlePointerUp = () => {
+      setIsConnectingField(false);
+    };
+    
+    window.addEventListener('pointerup', handlePointerUp);
+    
+    return () => {
+      window.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, []);
 
   // 使用memo缓存rendering字段列表
   const renderedFields = useMemo(() => {
@@ -155,6 +189,7 @@ export default function Table(props) {
               <button
                 className="shrink-0 w-[10px] h-[10px] bg-[#2f68adcc] rounded-full"
                 onPointerDown={(e) => handleGripFieldClick(index, e)}
+                onClick={(e) => e.stopPropagation()} /* 防止点击冒泡 */
               />
             )}
             <span className="overflow-hidden text-ellipsis whitespace-nowrap">
@@ -170,7 +205,10 @@ export default function Table(props) {
                   backgroundColor: "#d42020b3",
                 }}
                 icon={<IconMinus />}
-                onClick={() => deleteField(fieldData, tableData.id)}
+                onClick={(e) => {
+                  e.stopPropagation(); /* 防止点击冒泡 */
+                  deleteField(fieldData, tableData.id);
+                }}
               />
             ) : settings.showDataTypes ? (
               <div className="flex gap-1 items-center">
@@ -214,7 +252,7 @@ export default function Table(props) {
         width={settings.tableWidth}
         height={height}
         className={`group drop-shadow-lg rounded-md ${readOnly ? 'cursor-default' : 'cursor-move'}`}
-        onPointerDown={onPointerDown}
+        onPointerDown={handleTablePointerDown}
       >
         <div
           onDoubleClick={readOnly ? null : openEditor}

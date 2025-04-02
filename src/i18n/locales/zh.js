@@ -397,6 +397,26 @@ const zh = {
     empty_index_name: "在表'{{tableName}}'中声明了一个没有名称的索引",
     didnt_find_diagram: "哎呀！没有找到图表。",
     json_editor: "JSON编辑器",
+    
+    // 添加JSON校验相关翻译
+    json_format_error: "JSON格式错误",
+    json_invalid_structure: "JSON结构无效",
+    check_json_format: "请检查JSON格式和对象结构",
+    line: "行",
+    error_line_content: "错误行内容",
+    position: "位置",
+    json_schema_validation_error: "JSON模式验证错误",
+    please_check_json_schema: "请检查JSON格式是否符合要求的结构",
+    field_missing: "缺少必填字段",
+    invalid_type: "字段类型无效",
+    unexpected_field: "意外的字段",
+    invalid_format: "格式无效",
+    tables_format_error: "表格格式错误",
+    relationships_format_error: "关系格式错误",
+    notes_format_error: "注释格式错误",
+    subject_areas_format_error: "主题区域格式错误",
+    types_format_error: "类型格式错误",
+    enums_format_error: "枚举格式错误",
   },
 };
 

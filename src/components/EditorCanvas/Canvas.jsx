@@ -382,6 +382,9 @@ export default function Canvas() {
     if (selectedElement.open && !layout.sidebar) return;
 
     if (!e.isPrimary) return;
+    
+    // 如果正在链接字段，则不进行拖动或平移操作
+    if (linking) return;
 
     // don't pan if the sidesheet for editing a table is open
     if (

@@ -12,9 +12,10 @@ import TabsContainer from "../common/TabsContainer";
 import { isRtl } from "../../i18n/utils/rtl";
 import i18n from "../../i18n/i18n";
 import { State } from "../../data/constants";
-import { Toast, Banner } from "@douyinfe/semi-ui";
+import { Banner } from "@douyinfe/semi-ui";
 import { Validator } from "jsonschema";
 import { tableSchema, areaSchema, noteSchema, typeSchema, enumSchema } from "../../data/schemas";
+import { getIssues } from "../../utils/issues";
 
 /**
  * JSON编辑器组件
@@ -46,6 +47,8 @@ export default function JsonEditor({ width, resize, setResize }) {
 
     // 添加JSON验证错误状态
     const [validationError, setValidationError] = useState(null);
+    // 添加issues列表状态
+    const [validationIssues, setValidationIssues] = useState([]);
 
     // 添加自己的宽度控制状态
     const [editorWidth, setEditorWidth] = useState(width || 360);
@@ -121,44 +124,6 @@ export default function JsonEditor({ width, resize, setResize }) {
         };
     }, [isResizing]);
 
-    // 当数据变化时更新JSON文本
-    useEffect(() => {
-        setTablesJson(JSON.stringify(tables, null, 2));
-        setRelationshipsJson(JSON.stringify(relationships, null, 2));
-        setAreasJson(JSON.stringify(areas, null, 2));
-        setNotesJson(JSON.stringify(notes, null, 2));
-        if (types) setTypesJson(JSON.stringify(types, null, 2));
-        if (enums) setEnumsJson(JSON.stringify(enums, null, 2));
-        
-        // 清除验证错误
-        setValidationError(null);
-    }, [tables, relationships, areas, notes, types, enums]);
-
-    // 验证JSON数据是否符合预期结构
-    const validateJson = useCallback((data, schema, type) => {
-        const result = validator.current.validate(data, { type: "array", items: schema });
-        if (!result.valid) {
-            // 获取错误详情
-            const errors = result.errors.map(err => {
-                // 提取错误路径和消息，格式化成友好的提示
-                const path = err.property.replace('instance', '');
-                const message = err.message;
-                return `${path}: ${message}`;
-            });
-            
-            // 设置验证错误信息
-            setValidationError({
-                type,
-                message: errors.join('\n'),
-                timestamp: Date.now()
-            });
-            
-            return false;
-        }
-        
-        return true;
-    }, [t]);
-
     // 找出JSON字符串中指定位置的行号
     const findLineNumber = useCallback((text, position) => {
         if (position === undefined || position < 0 || position >= text.length) {
@@ -197,7 +162,7 @@ export default function JsonEditor({ width, resize, setResize }) {
             const errorLine = lines[lineNumber - 1];
             
             // 格式化错误信息，包含行号和行内容
-            errorMessage = `第 ${lineNumber} 行: ${errorMessage}\n错误行内容: "${errorLine.trim()}"`;
+            errorMessage = `${t('line')} ${lineNumber}: ${errorMessage}\n${t('error_line_content')}: "${errorLine.trim()}"`;
         }
         
         // 设置验证错误信息
@@ -207,47 +172,172 @@ export default function JsonEditor({ width, resize, setResize }) {
             line: lineNumber,
             timestamp: Date.now()
         });
-    }, [findLineNumber]);
+    }, [findLineNumber, t]);
 
-    // 使用防抖函数延迟更新应用状态，并触发保存
-    const debounceUpdate = useCallback((updateFn, parsedData, schema, type) => {
-        // 清除之前的定时器
-        if (debounceTimerRef.current) {
-            clearTimeout(debounceTimerRef.current);
+    // 验证JSON数据是否符合预期结构
+    const validateJson = useCallback((data, schema, type) => {
+        const result = validator.current.validate(data, { type: "array", items: schema });
+        if (!result.valid) {
+            // 获取错误详情
+            const errors = result.errors.map(err => {
+                // 提取错误路径和消息，格式化成友好的提示
+                const path = err.property.replace('instance', '');
+                const message = err.message;
+                return `${path}: ${message}`;
+            });
+            
+            // 设置验证错误信息
+            setValidationError({
+                type,
+                message: errors.join('\n'),
+                timestamp: Date.now()
+            });
+            
+            return false;
         }
         
-        // 设置新的定时器，减少延迟时间实现更实时的保存
-        debounceTimerRef.current = setTimeout(() => {
-            try {
-                // 先进行Schema验证
-                if (schema && !validateJson(parsedData, schema, type)) {
-                    return; // 验证失败，不更新
-                }
-                
-                // 验证通过，执行更新
-                updateFn();
-                
-                // 清除错误状态
-                setValidationError(null);
-                
-                // 更新成功后触发保存
-                setSaveState(State.SAVING);
-            } catch (error) {
-                console.error("JSON处理错误:", error);
-                setValidationError({
-                    type,
-                    message: error.message,
-                    timestamp: Date.now()
-                });
+        return true;
+    }, [t]);
+
+    // 检查数据完整性并生成issues
+    const checkDataIssues = useCallback((parsedData, type) => {
+        // 如果数据为空，则不检查issues
+        if (!parsedData) return [];
+
+        try {
+            // 根据数据类型准备完整的数据结构以检查issues
+            let testData = {
+                tables: [...tables],
+                relationships: [...relationships],
+                notes: [...notes],
+                areas: [...areas],
+                database: database
+            };
+
+            // 确保types和enums有值时才添加
+            if (types && types.length > 0) {
+                testData.types = [...types];
             }
-        }, 300); // 减少到300毫秒，实现更实时的响应
-    }, [setSaveState, validateJson]);
+            if (enums && enums.length > 0) {
+                testData.enums = [...enums];
+            }
+
+            // 根据编辑类型替换相应数据
+            switch(type) {
+                case "tables":
+                    testData.tables = Array.isArray(parsedData) ? parsedData : [];
+                    break;
+                case "relationships":
+                    testData.relationships = Array.isArray(parsedData) ? parsedData : [];
+                    break;
+                case "notes":
+                    testData.notes = Array.isArray(parsedData) ? parsedData : [];
+                    // notes不会在issues中检查，但仍需提供
+                    break;
+                case "subject_areas":
+                    testData.areas = Array.isArray(parsedData) ? parsedData : [];
+                    // areas不会在issues中检查，但仍需提供
+                    break;
+                case "types":
+                    testData.types = Array.isArray(parsedData) ? parsedData : [];
+                    break;
+                case "enums":
+                    testData.enums = Array.isArray(parsedData) ? parsedData : [];
+                    break;
+                default:
+                    return [];
+            }
+
+            // 确保testData的所有数组属性都存在且是数组类型
+            if (!testData.tables) testData.tables = [];
+            if (!testData.relationships) testData.relationships = [];
+            if (!testData.notes) testData.notes = [];
+            if (!testData.areas) testData.areas = [];
+            if (!testData.types) testData.types = [];
+            if (!testData.enums) testData.enums = [];
+
+            // 使用getIssues函数获取可能的问题
+            const issues = getIssues(testData) || [];
+                        return issues;
+        } catch (error) {
+            console.error(`检查${type}类型JSON的issues出错:`, error);
+            return [`${t('check_failed')}: ${error.message}`];
+        }
+    }, [tables, relationships, types, enums, notes, areas, database, t, settings.strictMode]);
+
+    // 当数据变化时更新JSON文本
+    useEffect(() => {
+        setTablesJson(JSON.stringify(tables, null, 2));
+        setRelationshipsJson(JSON.stringify(relationships, null, 2));
+        setAreasJson(JSON.stringify(areas, null, 2));
+        setNotesJson(JSON.stringify(notes, null, 2));
+        if (types) setTypesJson(JSON.stringify(types, null, 2));
+        if (enums) setEnumsJson(JSON.stringify(enums, null, 2));
+        
+        // 清除验证错误，但保留issues显示
+        setValidationError(null);
+        
+        // 重新执行issues检查
+        const currentTab = selectedElement.currentTab;
+        let dataToCheck;
+        let dataType;
+        
+        switch(currentTab) {
+            case Tab.TABLES:
+                dataToCheck = tables;
+                dataType = "tables";
+                break;
+            case Tab.RELATIONSHIPS:
+                dataToCheck = relationships;
+                dataType = "relationships";
+                break;
+            case Tab.AREAS:
+                dataToCheck = areas;
+                dataType = "subject_areas";
+                break;
+            case Tab.NOTES:
+                dataToCheck = notes;
+                dataType = "notes";
+                break;
+            case Tab.TYPES:
+                dataToCheck = types;
+                dataType = "types";
+                break;
+            case Tab.ENUMS:
+                dataToCheck = enums;
+                dataType = "enums";
+                break;
+            default:
+                return;
+        }
+        
+        // 检查当前标签页的数据issues
+        if (dataToCheck) {
+            // 异步执行以避免阻塞UI
+            setTimeout(() => {
+                try {
+                    const issues = checkDataIssues(dataToCheck, dataType);
+                    setValidationIssues(issues);
+                } catch (error) {
+                    console.error(`检查${dataType}issues时出错:`, error);
+                }
+            }, 0);
+        }
+    }, [tables, relationships, areas, notes, types, enums, selectedElement.currentTab, checkDataIssues]);
 
     // 处理JSON内容变化
     const handleJsonChange = (value, type) => {
         try {
             // 先尝试解析JSON，确保基本的JSON格式是正确的
             const parsedData = JSON.parse(value);
+            
+            // 无论JSON格式是否正确，都检查并更新issues
+            try {
+                const issues = checkDataIssues(parsedData, type);
+                setValidationIssues(issues);
+            } catch (error) {
+                console.error(`检查${type}issues时出错:`, error);
+            }
             
             switch (type) {
                 case "tables":
@@ -313,6 +403,63 @@ export default function JsonEditor({ width, resize, setResize }) {
         }
     };
 
+    // 渲染验证错误和issues
+    const renderErrorAndIssues = useCallback((validationType) => {
+        return (
+            <>
+                {validationError && validationError.type === validationType && (
+                    <Banner
+                        type="danger"
+                        closeIcon={null}
+                        className="mb-2"
+                        description={
+                            <div className="text-xs">
+                                <strong>{t(`${validationType}_format_error`)}：</strong>
+                                <pre className="max-h-24 overflow-auto whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                                    {validationError.message}
+                                </pre>
+                                <div className="mt-1 italic text-gray-600 dark:text-gray-400">
+                                    {validationError.line > 0 ? 
+                                        `${t('position')}: ${t('line')} ${validationError.line}` : 
+                                        t('check_json_format')}
+                                </div>
+                            </div>
+                        }
+                    />
+                )}
+                {/* 始终显示issues，只要有issues存在，不再受strictMode控制 */}
+                {validationIssues && validationIssues.length > 0 && (
+                    <Banner
+                        type="warning"
+                        closeIcon={null}
+                        icon={null}
+                        className="mb-3"
+                        description={
+                            <div className="text-xs">
+                                <strong>
+                                    <i className="fa-solid fa-triangle-exclamation me-2 text-yellow-500" />
+                                    {t("issues")} ({validationIssues.length}):
+                                </strong>
+                                <div className="max-h-[120px] overflow-y-auto mt-2">
+                                    {validationIssues.map((issue, index) => (
+                                        <div key={index} className="py-1 text-xs">
+                                            • {issue}
+                                        </div>
+                                    ))}
+                                </div>
+                                {settings.strictMode && (
+                                    <div className="mt-2 italic text-gray-600 dark:text-gray-400">
+                                        {t('strict_mode_hint', '严格模式下这些问题不会影响保存，但建议修复以确保数据一致性')}
+                                    </div>
+                                )}
+                            </div>
+                        }
+                    />
+                )}
+            </>
+        );
+    }, [validationError, validationIssues, t, settings.strictMode]);
+
     // 配置标签页
     const tabList = useMemo(() => {
         const tabs = [
@@ -322,27 +469,7 @@ export default function JsonEditor({ width, resize, setResize }) {
                 count: tablesCount,
                 component: (
                     <div>
-                        {/* 针对tables的错误显示 */}
-                        {validationError && validationError.type === "tables" && (
-                            <Banner
-                                type="danger"
-                                closeIcon={null}
-                                className="mb-3"
-                                description={
-                                    <div className="text-xs">
-                                        <strong>{t("tables")}格式错误：</strong>
-                                        <pre className="max-h-24 overflow-auto whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                                            {validationError.message}
-                                        </pre>
-                                        <div className="mt-1 italic text-gray-600 dark:text-gray-400">
-                                            {validationError.line > 0 ? 
-                                                `位置: 第 ${validationError.line} 行` : 
-                                                "请检查JSON格式和对象结构"}
-                                        </div>
-                                    </div>
-                                }
-                            />
-                        )}
+                        {renderErrorAndIssues("tables")}
                         <CodeMirror
                             value={tablesJson}
                             extensions={[json()]}
@@ -358,27 +485,7 @@ export default function JsonEditor({ width, resize, setResize }) {
                 count: relationshipsCount,
                 component: (
                     <div>
-                        {/* 针对relationships的错误显示 */}
-                        {validationError && validationError.type === "relationships" && (
-                            <Banner
-                                type="danger"
-                                closeIcon={null}
-                                className="mb-3"
-                                description={
-                                    <div className="text-xs">
-                                        <strong>{t("relationships")}格式错误：</strong>
-                                        <pre className="max-h-24 overflow-auto whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                                            {validationError.message}
-                                        </pre>
-                                        <div className="mt-1 italic text-gray-600 dark:text-gray-400">
-                                            {validationError.line > 0 ? 
-                                                `位置: 第 ${validationError.line} 行` : 
-                                                "请检查JSON格式和对象结构"}
-                                        </div>
-                                    </div>
-                                }
-                            />
-                        )}
+                        {renderErrorAndIssues("relationships")}
                         <CodeMirror
                             value={relationshipsJson}
                             extensions={[json()]}
@@ -394,27 +501,7 @@ export default function JsonEditor({ width, resize, setResize }) {
                 count: areasCount,
                 component: (
                     <div>
-                        {/* 针对areas的错误显示 */}
-                        {validationError && validationError.type === "subject_areas" && (
-                            <Banner
-                                type="danger"
-                                closeIcon={null}
-                                className="mb-3"
-                                description={
-                                    <div className="text-xs">
-                                        <strong>{t("subject_areas")}格式错误：</strong>
-                                        <pre className="max-h-24 overflow-auto whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                                            {validationError.message}
-                                        </pre>
-                                        <div className="mt-1 italic text-gray-600 dark:text-gray-400">
-                                            {validationError.line > 0 ? 
-                                                `位置: 第 ${validationError.line} 行` : 
-                                                "请检查JSON格式和对象结构"}
-                                        </div>
-                                    </div>
-                                }
-                            />
-                        )}
+                        {renderErrorAndIssues("subject_areas")}
                         <CodeMirror
                             value={areasJson}
                             extensions={[json()]}
@@ -430,27 +517,7 @@ export default function JsonEditor({ width, resize, setResize }) {
                 count: notesCount,
                 component: (
                     <div>
-                        {/* 针对notes的错误显示 */}
-                        {validationError && validationError.type === "notes" && (
-                            <Banner
-                                type="danger"
-                                closeIcon={null}
-                                className="mb-3"
-                                description={
-                                    <div className="text-xs">
-                                        <strong>{t("notes")}格式错误：</strong>
-                                        <pre className="max-h-24 overflow-auto whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                                            {validationError.message}
-                                        </pre>
-                                        <div className="mt-1 italic text-gray-600 dark:text-gray-400">
-                                            {validationError.line > 0 ? 
-                                                `位置: 第 ${validationError.line} 行` : 
-                                                "请检查JSON格式和对象结构"}
-                                        </div>
-                                    </div>
-                                }
-                            />
-                        )}
+                        {renderErrorAndIssues("notes")}
                         <CodeMirror
                             value={notesJson}
                             extensions={[json()]}
@@ -468,27 +535,7 @@ export default function JsonEditor({ width, resize, setResize }) {
                 count: typesCount,
                 component: (
                     <div>
-                        {/* 针对types的错误显示 */}
-                        {validationError && validationError.type === "types" && (
-                            <Banner
-                                type="danger"
-                                closeIcon={null}
-                                className="mb-3"
-                                description={
-                                    <div className="text-xs">
-                                        <strong>{t("types")}格式错误：</strong>
-                                        <pre className="max-h-24 overflow-auto whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                                            {validationError.message}
-                                        </pre>
-                                        <div className="mt-1 italic text-gray-600 dark:text-gray-400">
-                                            {validationError.line > 0 ? 
-                                                `位置: 第 ${validationError.line} 行` : 
-                                                "请检查JSON格式和对象结构"}
-                                        </div>
-                                    </div>
-                                }
-                            />
-                        )}
+                        {renderErrorAndIssues("types")}
                         <CodeMirror
                             value={typesJson}
                             extensions={[json()]}
@@ -506,27 +553,7 @@ export default function JsonEditor({ width, resize, setResize }) {
                 count: enumsCount,
                 component: (
                     <div>
-                        {/* 针对enums的错误显示 */}
-                        {validationError && validationError.type === "enums" && (
-                            <Banner
-                                type="danger"
-                                closeIcon={null}
-                                className="mb-3"
-                                description={
-                                    <div className="text-xs">
-                                        <strong>{t("enums")}格式错误：</strong>
-                                        <pre className="max-h-24 overflow-auto whitespace-pre-wrap bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                                            {validationError.message}
-                                        </pre>
-                                        <div className="mt-1 italic text-gray-600 dark:text-gray-400">
-                                            {validationError.line > 0 ? 
-                                                `位置: 第 ${validationError.line} 行` : 
-                                                "请检查JSON格式和对象结构"}
-                                        </div>
-                                    </div>
-                                }
-                            />
-                        )}
+                        {renderErrorAndIssues("enums")}
                         <CodeMirror
                             value={enumsJson}
                             extensions={[json()]}
@@ -554,16 +581,59 @@ export default function JsonEditor({ width, resize, setResize }) {
         typesJson,
         enumsJson,
         settings.mode,
-        validationError, // 添加验证错误状态到依赖数组
+        validationError,
+        validationIssues,
+        renderErrorAndIssues
     ]);
+
+    // 使用防抖函数延迟更新应用状态，并触发保存
+    const debounceUpdate = useCallback((updateFn, parsedData, schema, type) => {
+        // 清除之前的定时器
+        if (debounceTimerRef.current) {
+            clearTimeout(debounceTimerRef.current);
+        }
+        
+        // 设置新的定时器，减少延迟时间实现更实时的响应
+        debounceTimerRef.current = setTimeout(() => {
+            try {
+                // 检查issues并单独设置，不影响JSON更新逻辑
+                try {
+                    const issues = checkDataIssues(parsedData, type);
+                    setValidationIssues(issues);
+                } catch (error) {
+                    console.error(`debounce检查${type}issues时出错:`, error);
+                }
+                
+                // 再进行Schema验证
+                if (schema && !validateJson(parsedData, schema, type)) {
+                    return; // 验证失败，不更新
+                }
+                
+                // 验证通过，执行更新
+                updateFn();
+                
+                // 清除错误状态
+                setValidationError(null);
+                
+                // 更新成功后触发保存
+                setSaveState(State.SAVING);
+            } catch (error) {
+                console.error("JSON处理错误:", error);
+                setValidationError({
+                    type,
+                    message: error.message,
+                    timestamp: Date.now()
+                });
+            }
+        }, 300); // 减少到300毫秒，实现更实时的响应
+    }, [setSaveState, validateJson, checkDataIssues]);
 
     return (
         <div className="flex h-full">
             {/* 当编辑器在右侧时，拖动条在左侧 */}
             {editorPosition === "right" && (
                 <div
-                    className={`flex justify-center items-center p-1 h-auto hover-2 cursor-col-resize ${isResizing && "bg-semi-grey-2"
-                        }`}
+                    className={`flex justify-center items-center p-1 h-auto hover-2 cursor-col-resize ${isResizing && "bg-semi-grey-2"}`}
                     onPointerDown={(e) => {
                         if (e.isPrimary) {
                             e.preventDefault();
@@ -590,8 +660,7 @@ export default function JsonEditor({ width, resize, setResize }) {
             {/* 当编辑器在左侧时，拖动条在右侧 */}
             {editorPosition === "left" && (
                 <div
-                    className={`flex justify-center items-center p-1 h-auto hover-2 cursor-col-resize ${isResizing && "bg-semi-grey-2"
-                        }`}
+                    className={`flex justify-center items-center p-1 h-auto hover-2 cursor-col-resize ${isResizing && "bg-semi-grey-2"}`}
                     onPointerDown={(e) => {
                         if (e.isPrimary) {
                             e.preventDefault();
@@ -604,4 +673,4 @@ export default function JsonEditor({ width, resize, setResize }) {
             )}
         </div>
     );
-} 
+}
