@@ -609,6 +609,11 @@ const handleCreateDiagram = async (ws, clientId, data) => {
   try {
     const { diagramData, requestId } = data;
 
+    // 确保图表有名称
+    if (!diagramData.name) {
+      diagramData.name = 'Untitled Diagram';
+    }
+    
     // 设置创建/修改时间
     diagramData.lastModified = new Date();
 

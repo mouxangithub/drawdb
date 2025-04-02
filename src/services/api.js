@@ -198,6 +198,10 @@ export const diagramApi = {
    */
   update: async (id, data) => {
     try {
+      // 确保id存在
+      if (!id) {
+        throw new Error('图表ID不能为空');
+      }
       const response = await api.put(`/diagrams/${id}`, data);
       return response.data;
     } catch (error) {

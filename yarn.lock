@@ -4035,7 +4035,7 @@ node-releases@^2.0.19:
   resolved "https://registry.npmmirror.com/node-releases/-/node-releases-2.0.19.tgz#9e445a52950951ec4d177d843af370b411caf314"
   integrity sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==
 
-node-sql-parser@^5.3.7:
+node-sql-parser@^5.3.8:
   version "5.3.8"
   resolved "https://registry.npmmirror.com/node-sql-parser/-/node-sql-parser-5.3.8.tgz#b71db4cb80dc5302fc77d7b6ca3bcb269b2124bf"
   integrity sha512-aqGTzK8kPJAwQ6tqdS0l+vX358LXMmZDw902ePfiPn3PSDsg2HeR2tHFioXNHJW00YHoic6VVYY80waFb/zdxw==
@@ -4155,6 +4155,11 @@ optionator@^0.9.3:
     prelude-ls "^1.2.1"
     type-check "^0.4.0"
     word-wrap "^1.2.5"
+
+oracle-sql-parser@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.npmmirror.com/oracle-sql-parser/-/oracle-sql-parser-0.1.0.tgz#7b3e1a5ca90e18deba290be0526d86944ce9edec"
+  integrity sha512-8MLYOJIKaOY1cWvnMFuYPxWcDH5GfmJMh/f1Tyow0bydC31heO+eSoexZW+NJBSdK87lNJl8nsQ/SY//ZGOwcQ==
 
 own-keys@^1.0.1:
   version "1.0.1"
@@ -5269,7 +5274,7 @@ vfile@^6.0.0:
     "@types/unist" "^3.0.0"
     vfile-message "^4.0.0"
 
-vite@^6.2.3:
+vite@^6.2.4:
   version "6.2.4"
   resolved "https://registry.npmmirror.com/vite/-/vite-6.2.4.tgz#05809de3f918fded87f73a838761995a4d66a680"
   integrity sha512-veHMSew8CcRzhL5o8ONjy8gkfmFJAd5Ac16oxBUjlwgX3Gq2Wqr+qNC3TjPIpy7TPV/KporLga5GT9HqdrCizw==

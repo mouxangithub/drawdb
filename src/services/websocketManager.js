@@ -12,9 +12,11 @@ const CONNECTION_TIMEOUT = 15000; // 连接超时时间，15秒
 const HEARTBEAT_INTERVAL = 30000; // 心跳间隔，30秒
 const RECONNECT_DELAY = 2000; // 重连延迟，2秒
 const MAX_RECONNECT_ATTEMPTS = 3; // 最大重连尝试次数
-const MIN_RECONNECT_INTERVAL = 3000; // 最小重连间隔，3秒
+const MIN_RECONNECT_INTERVAL = 5000; // 最小重连间隔，增加到5秒，减少频繁连接问题
 const DISCONNECT_DELAY = 2000; // 断开连接延迟，增加到2秒，减少频繁断开重连
 const CONNECTION_STABILITY_PERIOD = 5000; // 连接稳定期，5秒内不允许断开
+// 添加退避算法的最大重试间隔
+const MAX_RETRY_INTERVAL = 30000; // 最大重试间隔，30秒
 
 // API配置
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 
@@ -46,6 +48,9 @@ let connectionState = {
     onConnectionError: []
   }
 };
+
+// 添加连接冷却期缓存，防止频繁连接
+let connectionCooldowns = {};
 
 /**
  * 添加WebSocket事件监听器
@@ -133,23 +138,37 @@ export const connectToWebSocket = (diagramId, options = {}) => {
     return connectionState.connectionPromise;
   }
   
-  // 阻止频繁连接尝试 - 除非是之前已有的diagramId，则限制更严格
+  // 检查连接冷却期
   const now = Date.now();
-  const timeSinceLastAttempt = now - connectionState.lastAttemptTime;
+  const cooldownKey = diagramId || 'global';
+  const lastAttemptTime = connectionCooldowns[cooldownKey] || 0;
+  const timeSinceLastAttempt = now - lastAttemptTime;
   
-  if (connectionState.diagramId === diagramId) {
-    // 对于同一图表的重连请求，使用较短的间隔
-    if (timeSinceLastAttempt < MIN_RECONNECT_INTERVAL) {
-      console.warn(`WebSocket连接请求过于频繁 (${diagramId})`);
-      return Promise.reject(new Error("连接请求过于频繁，请稍后再试"));
-    }
-  } else {
-    // 对于不同图表的连接请求，只要不是特别频繁即可
-    if (timeSinceLastAttempt < 1000) {
-      console.warn(`WebSocket连接请求过于频繁 (${diagramId})`);
-      return Promise.reject(new Error("连接请求过于频繁，请稍后再试"));
-    }
+  // 全局连接冷却期，防止任何图表频繁连接
+  const globalLastAttempt = connectionCooldowns['global'] || 0;
+  const globalTimeSince = now - globalLastAttempt;
+  
+  if (globalTimeSince < 1000) {
+    console.warn(`WebSocket全局连接冷却期内，请稍后再试`);
+    return Promise.reject(new Error("连接请求过于频繁，请稍后再试"));
   }
+  
+  // 特定图表的连接冷却检查
+  if (timeSinceLastAttempt < MIN_RECONNECT_INTERVAL) {
+    console.warn(`WebSocket连接请求过于频繁 (${diagramId})`);
+    return Promise.reject(new Error("连接请求过于频繁，请稍后再试"));
+  }
+  
+  // 更新冷却期记录
+  connectionCooldowns[cooldownKey] = now;
+  connectionCooldowns['global'] = now;
+  
+  // 定期清理过期的冷却记录（2分钟以上的）
+  Object.keys(connectionCooldowns).forEach(key => {
+    if (now - connectionCooldowns[key] > 120000) {
+      delete connectionCooldowns[key];
+    }
+  });
   
   // 如果认证失败，拒绝连接
   if (connectionState.authFailed) {
@@ -496,12 +515,17 @@ const startHeartbeat = () => {
 
 /**
  * 安排WebSocket重连
+ * 使用退避算法来计算重连延迟
  */
 const scheduleReconnect = () => {
   clearTimeout(connectionState.reconnectTimer);
   
   connectionState.reconnectAttempts++;
-  const delay = RECONNECT_DELAY * Math.pow(1.5, connectionState.reconnectAttempts - 1);
+  // 使用指数退避算法计算延迟时间，并限制最大值
+  const baseDelay = RECONNECT_DELAY * Math.pow(1.5, connectionState.reconnectAttempts - 1);
+  const delay = Math.min(baseDelay, MAX_RETRY_INTERVAL);
+  
+  console.log(`安排WebSocket重连，尝试次数: ${connectionState.reconnectAttempts}，延迟: ${delay}ms`);
   
   connectionState.reconnectTimer = setTimeout(() => {
     if (connectionState.diagramId && !connectionState.authFailed) {

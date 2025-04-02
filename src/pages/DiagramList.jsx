@@ -34,6 +34,8 @@ import DiagramViewModal from '../components/common/DiagramViewModal';
 import ThemeLanguageSwitcher from '../components/common/ThemeLanguageSwitcher';
 import { formatDateTime } from '../utils/utils';
 import '../styles/pages/DiagramList.css'; // 添加CSS导入
+import { databases } from '../data/databases'; // 添加数据库常量
+import { useSettings } from '../hooks'; // 添加设置钩子
 
 /**
  * 图表列表页面
@@ -64,8 +66,16 @@ export default function DiagramList() {
   const [detailedDiagram, setDetailedDiagram] = useState(null);
   const [displayMode, setDisplayMode] = useState('grid'); // 'grid' 或 'table'
   
+  // 添加数据库选择模态框状态
+  const [showDbSelectModal, setShowDbSelectModal] = useState(false);
+  const [selectedDb, setSelectedDb] = useState('');
+  
+  // 添加图表名称状态
+  const [diagramName, setDiagramName] = useState('');
+  
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { settings } = useSettings();
   
   // 使用ref避免在状态更新过程中获取过时的状态值
   const loadingRef = useRef(false);
@@ -232,10 +242,56 @@ export default function DiagramList() {
     setActiveFilters(count);
   }, [databaseFilter, createTimeRange, updateTimeRange]);
 
-  // 创建新图表
+  // 创建新图表 - 修改为显示数据库选择对话框
   const handleCreateDiagram = useCallback(() => {
-    navigate('/editor');
-  }, [navigate]);
+    setSelectedDb('');
+    setDiagramName('');
+    setShowDbSelectModal(true);
+  }, []);
+  
+  // 添加处理数据库选择的函数
+  const handleDbSelect = useCallback((dbLabel) => {
+    setSelectedDb(dbLabel);
+    // 如果用户还没有输入名称，则生成默认名称
+    if (!diagramName) {
+      const dbName = Object.values(databases).find(x => x.label === dbLabel)?.name || 'Database';
+      setDiagramName(`${dbName} Diagram ${new Date().toLocaleDateString()}`);
+    }
+  }, [diagramName]);
+
+  // 创建并导航到新图表
+  const handleCreateAndNavigate = useCallback(async () => {
+    if (!selectedDb) return;
+    
+    try {
+      setLoading(true);
+      
+      // 准备图表数据
+      const diagramData = {
+        name: diagramName || 'Untitled Diagram',
+        database: selectedDb,
+        lastModified: new Date(),
+        tables: [],
+        references: [],
+        notes: [],
+        areas: []
+      };
+      
+      // 创建新图表
+      const newDiagram = await diagramApi.create(diagramData);
+      
+      // 导航到编辑页面
+      navigate(`/editor/${newDiagram.id}`);
+    } catch (error) {
+      console.error('创建图表失败:', error);
+      Notification.error({
+        title: t('error'),
+        content: t('create_diagram_failed'),
+        duration: 3
+      });
+      setLoading(false);
+    }
+  }, [navigate, selectedDb, diagramName, t]);
 
   // 编辑图表
   const handleEditDiagram = useCallback((id) => {
@@ -753,6 +809,66 @@ export default function DiagramList() {
           </>
         )}
       </Card>
+      
+      {/* 添加数据库选择对话框 */}
+      <Modal
+        centered
+        size="medium"
+        closable={true}
+        hasCancel={true}
+        title={t("pick_db")}
+        okText={t("confirm")}
+        visible={showDbSelectModal}
+        onOk={handleCreateAndNavigate}
+        onCancel={() => setShowDbSelectModal(false)}
+        okButtonProps={{ 
+          disabled: selectedDb === "",
+          loading: loading
+        }}
+      >
+        <div className="space-y-4">
+          {/* 添加图表名称输入框 */}
+          <div>
+            <Typography.Text className="text-color mb-2 block">
+              {t('diagram_name')}
+            </Typography.Text>
+            <Input
+              value={diagramName}
+              onChange={setDiagramName}
+              placeholder={t('enter_diagram_name')}
+              className="w-full"
+            />
+          </div>
+          
+          {/* 数据库选择网格 */}
+          <div className="grid grid-cols-3 gap-4 place-content-center">
+            {Object.values(databases).map((x) => (
+              <div
+                key={x.name}
+                onClick={() => handleDbSelect(x.label)}
+                className={`space-y-3 py-3 px-4 rounded-md border-2 select-none cursor-pointer ${
+                  document.body.getAttribute('theme-mode') === "dark"
+                    ? "bg-zinc-700 hover:bg-zinc-600"
+                    : "bg-zinc-100 hover:bg-zinc-200"
+                } ${selectedDb === x.label ? "border-zinc-400" : "border-transparent"}`}
+              >
+                <div className="font-semibold">{x.name}</div>
+                {x.image && (
+                  <img
+                    src={x.image}
+                    className="h-10"
+                    style={{
+                      filter:
+                        "opacity(0.4) drop-shadow(0 0 0 white) drop-shadow(0 0 0 white)",
+                    }}
+                  />
+                )}
+                <div className="text-xs">{x.description}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Modal>
       
       {/* 分享模态框 */}
       <ShareModal 

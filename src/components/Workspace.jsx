@@ -20,7 +20,7 @@ import {
   useWebSocket,
 } from "../hooks";
 import FloatingControls from "./common/ZoomControl";
-import { Modal, Toast } from "@douyinfe/semi-ui";
+import { Modal, Toast, Tag } from "@douyinfe/semi-ui";
 import { useTranslation } from "react-i18next";
 import { databases } from "../data/databases";
 import { isRtl } from "../i18n/utils/rtl";
@@ -131,6 +131,14 @@ export default function WorkSpace({ diagramId }) {
       const newUserId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       localStorage.setItem("drawdb_user_id", newUserId);
       localUserId.current = newUserId;
+    }
+  }, []);
+
+  // 在组件挂载时，确保新建图表时有默认标题
+  useEffect(() => {
+    // 如果是新建图表（没有ID），设置默认标题
+    if (!diagramId) {
+      setTitle("Untitled Diagram");
     }
   }, []);
 
@@ -984,11 +992,11 @@ export default function WorkSpace({ diagramId }) {
               setDatabase(DB.GENERIC);
             }
             setId(diagram.id);
-            setTitle(diagram.name);
-            setTables(diagram.tables);
-            setRelationships(diagram.references);
-            setAreas(diagram.areas);
-            setNotes(diagram.notes);
+            setTitle(diagram.name || "Untitled Diagram");
+            setTables(diagram.tables || []);
+            setRelationships(diagram.references || []);
+            setAreas(diagram.areas || []);
+            setNotes(diagram.notes || []);
             setTasks(diagram.todos ?? []);
 
             // 优先使用本地存储的视图状态
@@ -1046,11 +1054,11 @@ export default function WorkSpace({ diagramId }) {
                 setDatabase(DB.GENERIC);
               }
               setId(diagram.id);
-              setTitle(diagram.name);
-              setTables(diagram.tables);
-              setRelationships(diagram.references);
-              setAreas(diagram.areas);
-              setNotes(diagram.notes);
+              setTitle(diagram.name || "Untitled Diagram");
+              setTables(diagram.tables || []);
+              setRelationships(diagram.references || []);
+              setAreas(diagram.areas || []);
+              setNotes(diagram.notes || []);
               setTasks(diagram.todos ?? []);
               setTransform({
                 pan: diagram.pan,
@@ -1086,6 +1094,10 @@ export default function WorkSpace({ diagramId }) {
       // 如果是直接进入/editor路径（无ID），则显示选择数据库对话框，不做自动重定向
       if (!diagramId) {
         if (selectedDb === "") setShowSelectDbModal(true);
+        // 确保新图表有默认标题
+        if (!title) {
+          setTitle("Untitled Diagram");
+        }
         setIsLoadingData(false);
         return;
       }
@@ -1102,11 +1114,11 @@ export default function WorkSpace({ diagramId }) {
             setDatabase(DB.GENERIC);
           }
           setId(latestDiagram.id);
-          setTitle(latestDiagram.name);
-          setTables(latestDiagram.tables);
-          setRelationships(latestDiagram.references);
-          setNotes(latestDiagram.notes);
-          setAreas(latestDiagram.areas);
+          setTitle(latestDiagram.name || "Untitled Diagram");
+          setTables(latestDiagram.tables || []);
+          setRelationships(latestDiagram.references || []);
+          setNotes(latestDiagram.notes || []);
+          setAreas(latestDiagram.areas || []);
           setTasks(latestDiagram.todos ?? []);
 
           // 优先使用本地存储的视图状态
@@ -1209,7 +1221,7 @@ export default function WorkSpace({ diagramId }) {
       // 从保存到服务器的数据中移除pan和zoom
       const diagramData = {
         database: database,
-        name: title,
+        name: title || "Untitled Diagram",
         gistId: gistId ?? "",
         lastModified: new Date(),
         tables: tables,
@@ -1241,7 +1253,10 @@ export default function WorkSpace({ diagramId }) {
         saveViewStateToLocalStorage(id, transform);
       }
 
-      if (id === 0) {
+      // 判断是创建新图表还是更新现有图表
+      const isNewDiagram = !id || id === 0;
+
+      if (isNewDiagram) {
         // 新建图表
         try {
           // 尝试通过WebSocket创建图表
@@ -1279,6 +1294,11 @@ export default function WorkSpace({ diagramId }) {
       } else {
         // 更新图表
         try {
+          // 确保有有效的图表ID
+          if (!id) {
+            throw new Error('无效的图表ID');
+          }
+
           // 尝试通过WebSocket保存图表
           if (diagramWebSocketApi.isConnected()) {
             const result = await diagramWebSocketApi.save(id, diagramData);
@@ -1291,9 +1311,14 @@ export default function WorkSpace({ diagramId }) {
         }
 
         // 如果WebSocket失败或未连接，回退到HTTP API
-        await diagramApi.update(id, diagramData);
-        setSaveState(State.SAVED);
-        setLastSaved(new Date().toLocaleString());
+        try {
+          await diagramApi.update(id, diagramData);
+          setSaveState(State.SAVED);
+          setLastSaved(new Date().toLocaleString());
+        } catch (error) {
+          console.error("通过HTTP API保存图表失败:", error);
+          throw error;
+        }
       }
     } catch (error) {
       console.error("保存图表失败:", error);
@@ -1535,6 +1560,10 @@ export default function WorkSpace({ diagramId }) {
         onOk={() => {
           if (selectedDb === "") return;
           setDatabase(selectedDb);
+          // 确保新图表有默认标题
+          if (!title) {
+            setTitle("Untitled Diagram");
+          }
           setShowSelectDbModal(false);
         }}
         okButtonProps={{ disabled: selectedDb === "" }}
@@ -1545,7 +1574,7 @@ export default function WorkSpace({ diagramId }) {
               key={x.name}
               onClick={() => setSelectedDb(x.label)}
               className={`space-y-3 py-3 px-4 rounded-md border-2 select-none ${
-                settings.mode === "dark"
+                document.body.getAttribute('theme-mode') === "dark"
                   ? "bg-zinc-700 hover:bg-zinc-600"
                   : "bg-zinc-100 hover:bg-zinc-200"
               } ${selectedDb === x.label ? "border-zinc-400" : "border-transparent"}`}

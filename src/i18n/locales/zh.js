@@ -293,6 +293,7 @@ const zh = {
     delete_diagram_failed: "删除图表失败",
     diagram_copied: "图表已复制",
     copy_diagram_failed: "复制图表失败",
+    create_diagram_failed: "创建图表失败",
     duplicate: "副本",
     search_diagram: "按名称搜索图表",
     new_diagram: "新建图表",
@@ -417,6 +418,19 @@ const zh = {
     subject_areas_format_error: "主题区域格式错误",
     types_format_error: "类型格式错误",
     enums_format_error: "枚举格式错误",
+    
+    // 数据库选择对话框相关
+    pick_db: "选择数据库类型",
+    diagram_name: "图表名称",
+    enter_diagram_name: "请输入图表名称",
+    confirm: "确认",
+    create_diagram_failed: "创建图表失败",
+    diagram_id_empty: "图表ID不能为空",
+    diagram_not_found: "图表不存在",
+    get_diagram_failed: "获取图表失败",
+    no_permission_to_access: "没有权限访问该图表",
+    server_error: "服务器错误，请稍后重试",
+    network_error: "网络连接错误，请检查网络设置",
   },
 };
 

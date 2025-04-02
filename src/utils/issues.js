@@ -18,12 +18,6 @@ export function getIssues(diagram) {
   const issues = [];
   const duplicateTableNames = {};
 
-  console.log("开始检查图表issues:", {
-    tables: diagram.tables.length,
-    relationships: diagram.relationships.length,
-    database: diagram.database
-  });
-
   diagram.tables.forEach((table) => {
     if (table.name === "") {
       issues.push(i18n.t("table_w_no_name"));

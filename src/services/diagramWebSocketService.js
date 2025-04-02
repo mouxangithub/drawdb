@@ -424,6 +424,11 @@ export const diagramWebSocketApi = {
   create: async (diagramData) => {
     return withRetry(async () => {
       try {
+        // 确保图表有名称
+        if (!diagramData.name) {
+          diagramData.name = "Untitled Diagram";
+        }
+        
         // 确保WebSocket已连接 (无图表ID)
         await ensureConnection();
         
