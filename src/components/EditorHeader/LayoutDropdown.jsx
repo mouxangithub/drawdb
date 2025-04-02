@@ -51,6 +51,14 @@ export default function LayoutDropdown() {
           >
             {t("issues")}
           </Dropdown.Item>
+          <Dropdown.Item
+            icon={
+              layout.jsonEditor ? <IconCheckboxTick /> : <div className="px-2" />
+            }
+            onClick={() => invertLayout("jsonEditor")}
+          >
+            {t("json_editor")}
+          </Dropdown.Item>
           <Dropdown.Divider />
           <Dropdown.Item
             icon={fullscreen ? <IconCheckboxTick /> : <div className="px-2" />}

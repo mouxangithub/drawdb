@@ -434,7 +434,8 @@ const en = {
     minutes_ago: "{{minutes}} minutes ago",
     hours_ago: "{{hours}} hours ago",
     last_active: "Last active",
-    status: "Status"
+    status: "Status",
+    json_editor: "JSON Editor"
   },
 };
 

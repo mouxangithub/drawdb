@@ -8,6 +8,7 @@ export default function LayoutContextProvider({ children }) {
     sidebar: true,
     issues: true,
     toolbar: true,
+    jsonEditor: true,
   });
 
   return (

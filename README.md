@@ -61,6 +61,7 @@ Compared to the original project, this fork adds several key features:
 - **Operation Synchronization**: All changes are instantly synchronized between all connected users
 - **Internationalization**: Support for multiple languages, including English and Chinese interfaces
 - **Advanced Filtering**: Filter diagrams by name, database type, creation date, and modification date
+- **JSON Editor**: Real-time JSON editing for tables, relationships, subject areas, and notes
 - **Free to Use**: All features completely free, no account registration required
 
 ## 🚀 Quick Start
@@ -179,16 +180,19 @@ drawdb/
 │  │  ├─ EditorCanvas/    # Canvas editor components
 │  │  ├─ EditorHeader/    # Editor header components
 │  │  ├─ EditorSidePanel/ # Editor side panel components
+│  │  ├─ JsonEditor/      # JSON编辑器组件
 │  │  └─ LexicalEditor/   # Rich text editor components
 │  ├─ context/            # React contexts
 │  │  ├─ WebSocketContext.jsx  # WebSocket连接上下文管理
 │  │  ├─ CollaborationContext.jsx  # 协作功能与用户活跃状态管理
+│  │  ├─ JsonEditorContext.jsx  # JSON编辑器状态管理
 │  │  └─ ...              # 其他上下文组件
 │  ├─ data/               # Static data and constants
 │  ├─ hooks/              # Custom React hooks
 │  │  ├─ useWebSocket.js  # WebSocket连接钩子
 │  │  ├─ useCollaboration.js  # 协作功能钩子
 │  │  ├─ useUserActivity.js  # 用户活跃状态监控钩子
+│  │  ├─ useJsonEditor.js  # JSON编辑器状态钩子
 │  │  └─ ...              # 其他钩子函数
 │  ├─ i18n/               # Internationalization configuration
 │  ├─ icons/              # Icon components
@@ -308,12 +312,14 @@ This project is released under the [AGPL-3.0 License](LICENSE), the same license
     - `EditorHeader/`: 编辑器头部控制面板组件
     - `EditorSidePanel/`: 编辑器侧边面板组件
     - `LexicalEditor/`: 富文本编辑器组件
+    - `JsonEditor/`: JSON编辑器组件
   - `context/`: React Context
     - `AuthContext.jsx`: 认证上下文
     - `CanvasContext.jsx`: 画布上下文
     - `DiagramContext.jsx`: 图表数据上下文
     - `WebSocketContext.jsx`: WebSocket连接上下文
     - `CollaborationContext.jsx`: 协作功能上下文
+    - `JsonEditorContext.jsx`: JSON编辑器状态管理
   - `services/`: 服务
     - `api.js`: HTTP API服务
     - `authService.js`: 认证服务

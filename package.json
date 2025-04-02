@@ -23,6 +23,7 @@
   "dependencies": {
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/lang-sql": "^6.6.3",
+    "@codemirror/search": "^6.5.10",
     "@dbml/core": "^3.9.7-alpha.0",
     "@douyinfe/semi-ui": "^2.51.3",
     "@lexical/react": "^0.12.5",

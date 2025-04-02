@@ -8,6 +8,7 @@ import Editor from "./pages/Editor";
 import DiagramList from "./pages/DiagramList";
 import SettingsContextProvider from "./context/SettingsContext";
 import WebSocketContextProvider from "./context/WebSocketContext";
+import JsonEditorContextProvider from "./context/JsonEditorContext";
 import { AuthProvider } from "./context/AuthContext";
 import WebSocketLoadingOverlay from "./components/WebSocketLoadingOverlay";
 import { useSettings } from "./hooks";
@@ -52,37 +53,39 @@ export default function App() {
       <SettingsContextProvider>
         <AuthProvider>
           <WebSocketContextProvider>
-            <BrowserRouter>
-              <RestoreScroll />
-              <WebSocketLoadingOverlay />
-              <Routes>
-                <Route
-                  path="/"
-                  element={
-                    <ThemedPage>
-                      <DiagramList />
-                    </ThemedPage>
-                  }
-                />
-                <Route
-                  path="/editor"
-                  element={
-                    <ThemedPage>
-                      <Editor />
-                    </ThemedPage>
-                  }
-                />
-                <Route
-                  path="/editor/:id"
-                  element={
-                    <ThemedPage>
-                      <Editor />
-                    </ThemedPage>
-                  }
-                />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </BrowserRouter>
+            <JsonEditorContextProvider>
+              <BrowserRouter>
+                <RestoreScroll />
+                <WebSocketLoadingOverlay />
+                <Routes>
+                  <Route
+                    path="/"
+                    element={
+                      <ThemedPage>
+                        <DiagramList />
+                      </ThemedPage>
+                    }
+                  />
+                  <Route
+                    path="/editor"
+                    element={
+                      <ThemedPage>
+                        <Editor />
+                      </ThemedPage>
+                    }
+                  />
+                  <Route
+                    path="/editor/:id"
+                    element={
+                      <ThemedPage>
+                        <Editor />
+                      </ThemedPage>
+                    }
+                  />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </BrowserRouter>
+            </JsonEditorContextProvider>
           </WebSocketContextProvider>
         </AuthProvider>
       </SettingsContextProvider>

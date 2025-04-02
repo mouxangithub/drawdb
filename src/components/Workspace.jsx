@@ -3,6 +3,7 @@ import ControlPanel from "./EditorHeader/ControlPanel";
 import Canvas from "./EditorCanvas/Canvas";
 import { CanvasContextProvider } from "../context/CanvasContext";
 import SidePanel from "./EditorSidePanel/SidePanel";
+import JsonEditor from "./EditorSidePanel/JsonEditor";
 import { DB, State, Action, ObjectType } from "../data/constants";
 import {
   useLayout,
@@ -78,47 +79,42 @@ export const IdContext = createContext({ gistId: "" });
 const DEBUG_MODE = false;
 
 export default function WorkSpace({ diagramId }) {
-  const [id, setId] = useState(diagramId ? parseInt(diagramId) : 0);
-  // 保留setGistId以备其他组件调用，但实际不再使用
-  const [gistId, setGistId] = useState("");
-  const [title, setTitle] = useState("Untitled Diagram");
+  const { tables, setTables, relationships, setRelationships, database, setDatabase } = useDiagram();
+  const { settings } = useSettings();
+  const { saveState, setSaveState } = useSaveState();
+  const { undoStack, redoStack, setUndoStack, setRedoStack } = useUndoRedo();
+  const { tasks, setTasks } = useTasks();
   const [resize, setResize] = useState(false);
-  const [width, setWidth] = useState(340);
+  const [width, setWidth] = useState(360);
+  const [id, setId] = useState(diagramId || "");
+  const [title, setTitle] = useState("");
+  const [gistId, setGistId] = useState("");
   const [lastSaved, setLastSaved] = useState("");
+  const [isLoadingData, setIsLoadingData] = useState(false);
+  const [loadingComplete, setLoadingComplete] = useState(false);
+  const { transform, setTransform } = useTransform();
   const [showSelectDbModal, setShowSelectDbModal] = useState(false);
   const [selectedDb, setSelectedDb] = useState("");
-  // 添加连接状态跟踪
-  const [hasInitiatedConnection, setHasInitiatedConnection] = useState(false);
-
+  const [operations, setOperations] = useState([]);
   const { layout } = useLayout();
-  const { settings } = useSettings();
-  const { types, setTypes } = useTypes();
   const { areas, setAreas } = useAreas();
-  const { tasks, setTasks } = useTasks();
   const { notes, setNotes } = useNotes();
-  const { saveState, setSaveState } = useSaveState();
-  const { transform, setTransform } = useTransform();
+  const { types, setTypes } = useTypes();
   const { enums, setEnums } = useEnums();
-  const navigate = useNavigate();
-  const {
-    tables,
-    relationships,
-    setTables,
-    setRelationships,
-    database,
-    setDatabase,
-  } = useDiagram();
-  const { undoStack, redoStack, setUndoStack, setRedoStack } = useUndoRedo();
+  const { addDiagram, saveDiagram } = useDiagram();
   const { t, i18n } = useTranslation();
-  const { connect, disconnect, connected } = useWebSocket();
-  const { sendCollaborationOperation, isCollaborating } = useCollaboration();
-
+  const navigate = useNavigate();
+  // WebSocket和协作相关的状态
+  const { isConnected, sendMessage, connect, disconnect, connected } = useWebSocket();
+  const { collaborators, pendingOperations, isCollaborating, sendCollaborationOperation } = useCollaboration();
+  
   // 是否正在处理远程操作（防止循环）
   const [processedOperation, setProcessedOperation] = useState(false);
-  // 是否正在加载图表数据
-  const [isLoadingData, setIsLoadingData] = useState(false);
-  // 加载是否已完成
-  const [loadingComplete, setLoadingComplete] = useState(false);
+  // 是否已经启动了WebSocket连接
+  const [hasInitiatedConnection, setHasInitiatedConnection] = useState(false);
+
+  // 添加调试模式标志，默认关闭
+  const DEBUG_MODE = false;
 
   // 添加记忆化的加载标志，防止对同一ID重复加载
   const loadedDiagramRef = useRef(null);
@@ -1524,6 +1520,9 @@ export default function WorkSpace({ diagramId }) {
             </div>
           )}
         </div>
+        {layout.jsonEditor && (
+          <JsonEditor resize={resize} setResize={setResize} width={width} />
+        )}
       </div>
       <Modal
         centered

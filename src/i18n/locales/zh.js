@@ -393,6 +393,10 @@ const zh = {
     hours_ago: "{{hours}}小时前",
     last_active: "最后活跃",
     status: "状态",
+    declare_array: "声明数组",
+    empty_index_name: "在表'{{tableName}}'中声明了一个没有名称的索引",
+    didnt_find_diagram: "哎呀！没有找到图表。",
+    json_editor: "JSON编辑器",
   },
 };
 
