@@ -307,6 +307,16 @@ const zh = {
     get_diagram_list_failed: "获取图表列表失败",
     get_diagram_detail_failed: "获取图表详情失败",
     generic: "通用",
+    generic_description: "通用图表可以导出为任何SQL格式，但支持的数据类型较少。",
+    enums: "枚举",
+    add_enum: "添加枚举",
+    edit_enum: "{{extra}} 编辑枚举 {{enumName}}",
+    delete_enum: "删除枚举",
+    enum_w_no_name: "声明了一个没有名称的枚举",
+    enum_w_no_values: "声明了一个没有值的空枚举 '{{enumName}}'",
+    duplicate_enums: "重复声明了名为 '{{enumName}}' 的枚举",
+    no_enums: "没有枚举",
+    no_enums_text: "在此定义枚举",
     update_link: "更新链接",
     copy_link: "复制链接",
     unsigned: "无符号",
@@ -362,6 +372,31 @@ const zh = {
     your_name: "你的名称",
     change_name: "修改名称",
     collaborating_with: "正在与 {{count}} 人协作",
+    
+    // 协作功能相关翻译
+    collaboration: {
+      connected: "已连接",
+      connecting: "连接中...",
+      disconnected: "已断开",
+      online: "用户在线",
+      start: "开始协作",
+      stop: "停止协作",
+      collaborators: "协作者",
+      statusLabel: "协作",
+      yourCursor: "你的光标",
+      syncing: "同步中...",
+      saved: "已通过WebSocket保存",
+      error: "连接错误",
+      reconnecting: "重新连接中...",
+      userJoined: "{{username}} 已加入",
+      userLeft: "{{username}} 已离开",
+      connectionLost: "连接丢失，尝试重新连接...",
+      connectionRestored: "连接已恢复"
+    },
+    
+    grid_view: "网格视图",
+    table_view: "表格视图",
+    name_required: "名称为必填项",
     
     // 新增协作功能翻译
     collaboration_connect: "连接协作",

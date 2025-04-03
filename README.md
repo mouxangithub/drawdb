@@ -180,6 +180,16 @@ drawdb/
 │  │  ├─ useJsonEditor.js  # JSON editor state hook
 │  │  └─ ...              # Other hooks
 │  ├─ i18n/               # Internationalization configuration
+│  │  ├─ locales/         # Translation files for different languages
+│  │  │  ├─ en.js         # English translations
+│  │  │  ├─ zh.js         # Chinese translations
+│  │  │  ├─ es.js         # Spanish translations
+│  │  │  ├─ fr.js         # French translations
+│  │  │  ├─ de.js         # German translations
+│  │  │  ├─ jp.js         # Japanese translations
+│  │  │  └─ ...           # Other language translations
+│  │  ├─ utils/           # i18n utility functions
+│  │  └─ i18n.js          # i18n configuration and initialization
 │  ├─ icons/              # Icon components
 │  ├─ pages/              # Page components
 │  ├─ services/           # APIs and services
@@ -199,6 +209,22 @@ drawdb/
 │     ├─ websocket/       # WebSocket server implementation
 │     └─ ...              # Other server code
 ```
+
+### 🌐 Internationalization (i18n)
+
+The project supports multiple languages through its i18n system:
+
+- **Supported Languages**: The application currently supports English, Chinese (Simplified and Traditional), Spanish, French, German, Japanese, and many others.
+- **Translation Files**: Each language has its own translation file located in `src/i18n/locales/`.
+- **Language Structure**: Each language file follows the same structure, with translations for all UI elements, messages, and tooltips.
+- **Language Switching**: Users can switch languages dynamically using the language dropdown in the UI.
+- **Latest Updates**: Translation files have been updated to include new terms for collaboration features, diagram management, and user interface elements.
+
+To add a new language or update existing translations:
+1. Navigate to the `src/i18n/locales/` directory
+2. Create a new file or modify an existing one based on the English (`en.js`) template
+3. Update the `i18n.js` file to register the new language
+4. Add the language to the language list in the UI
 
 ## 📋 Environment Variables
 
